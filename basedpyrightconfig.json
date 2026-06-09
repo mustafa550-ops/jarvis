@@ -1,0 +1,19 @@
+{
+    "typeCheckingMode": "basic",
+    "venvPath": ".",
+    "venv": ".venv",
+    "pythonVersion": "3.13",
+    "reportMissingImports": "none",
+    "reportMissingModuleSource": "none",
+    "reportMissingTypeArgument": "warning",
+    "reportConstantRedefinition": "none",
+    "reportMissingSuperCall": "none",
+    "reportPossiblyUnboundVariable": "warning",
+    "reportOptionalMemberAccess": "warning",
+    "reportGeneralTypeIssues": "warning",
+    "reportFunctionMemberAccess": "warning",
+    "reportIncompatibleMethodOverride": "warning",
+    "reportUninitializedInstanceVariable": "warning",
+    "reportAttributeAccessIssue": "warning",
+    "reportReturnType": "warning"
+}

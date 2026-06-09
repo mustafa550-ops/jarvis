@@ -1,0 +1,39 @@
+# JARVIS Ses Yapılandırması
+# RNNoise gürültü bastırma ayarları
+
+audio:
+  # Mikrofon ayarları
+  sample_rate: 48000
+  block_size: 480        # 10 ms @ 48kHz (RNNoise frame boyutu)
+  channels: 1            # Mono
+  dtype: "float32"
+
+  # Gürültü Bastırma
+  noise_suppression:
+    enabled: true
+    library: "rnnoise"   # Gelecekte: "deepfilternet", "webrtc" eklenebilir
+    frame_size: 480
+
+    # Eğer kütüphane yüklenemezse JARVIS çalışmaya devam etsin mi?
+    bypass_on_error: true
+
+  # VAD (Voice Activity Detection)
+  vad:
+    fahrettin:
+      engine: "energy"          # silero / webrtc / energy
+      energy_threshold: 50.0    # RMS threshold (was 400+, now 50 for normal speech)
+      debug_log: false          # log RMS/threshold every 50 frames
+
+  # Wake Word
+  wake_word:
+    model_path: "models/wake_word.tflite"
+    threshold: 0.7
+    # RNNoise sonrası sesin wake-word'e gittiğinden emin ol
+    apply_noise_suppression_before: true
+
+  # STT (Speech-to-Text)
+  stt:
+    engine: "whisper"    # veya "vosk", "deepgram", vb.
+    model: "base"
+    # RNNoise sonrası sesin STT'ye gittiğinden emin ol
+    apply_noise_suppression_before: true

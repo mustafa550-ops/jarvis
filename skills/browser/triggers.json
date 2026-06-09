@@ -1,0 +1,13 @@
+{
+  "skill_id": "browser-control-v1",
+  "triggers": {
+    "keywords": ["aç", "ac", "tarayıcı", "google", "youtube", "ara", "git", "oynat", "video", "şarkı"],
+    "intents": ["open_url", "search", "play_youtube"],
+    "patterns": [
+      "(.+?) +[aA]ç$",
+      "(.+?) +ac$",
+      "google'da +(.+?) +ara",
+      "youtube'da +(.+?) +oynat"
+    ]
+  }
+}

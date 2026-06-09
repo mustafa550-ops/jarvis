@@ -1,0 +1,66 @@
+# Ses Tonu Yapılandırması
+# JARVIS'in kullanabileceği ses profilleri
+
+voices:
+  fahrettin:
+    id: piper-fahrettin
+    name: "Fahrettin"
+    gender: male
+    engine: piper
+    language: tr-TR
+    description: "Piper ile yerel Türkçe erkek sesi"
+    model: "voice/Fahrettin-TTS/tr_TR-fahrettin-medium.onnx"
+    config: "voice/Fahrettin-TTS/tr_TR-fahrettin-medium.onnx.json"
+    default_speed: 1.0
+    default_pitch: 0
+    emotion_support: false
+
+  ahmet:
+    id: edge-ahmet
+    name: "Ahmet"
+    gender: male
+    engine: edge-tts
+    language: tr-TR
+    description: "Microsoft Edge Neural Türkçe erkek sesi (internet gerekli)"
+    default_speed: 1.0
+    default_pitch: 0
+    emotion_support: true          # SSML prosody desteği
+    requires_internet: true
+
+  emel:
+    id: edge-emel
+    name: "Emel"
+    gender: female
+    engine: edge-tts
+    language: tr-TR
+    description: "Microsoft Edge Neural Türkçe kadın sesi (internet gerekli)"
+    default_speed: 1.0
+    default_pitch: 0
+    emotion_support: true
+    requires_internet: true
+
+  system:
+    id: spd-say
+    name: "Sistem Sesi"
+    gender: unspecified
+    engine: spd-say
+    language: tr
+    description: "Speech Dispatcher sistem sesi (fallback)"
+    default_speed: 1.0
+    default_pitch: 0
+    emotion_support: true          # spd-say -p -r flagları
+    requires_internet: false
+
+# Varsayılan ses profili
+default_voice: fahrettin
+default_emotion: neutral
+
+# Otomatik ses seçimi
+auto_voice_selection: true
+# Hangi durumda hangi ses kullanılacak
+context_voice_mapping:
+  greeting: ahmet           # Karşılama
+  information: fahrettin    # Bilgi verme
+  warning: ahmet            # Uyarı (daha net)
+  error: ahmet              # Hata bildirimi
+  casual: fahrettin         # Günlük konuşma

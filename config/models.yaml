@@ -1,0 +1,74 @@
+# Model Yapılandırması
+# JARVIS'in kullanacağı tüm AI modellerinin listesi
+
+models:
+  # ── STT (Speech-to-Text) ──────────────────────────────────────────────────
+  stt:
+    primary:
+      name: "faster-whisper"
+      model: "base"           # tiny, base, small, medium, large-v3
+      language: "tr"
+      device: "cpu"
+      compute_type: "int8"
+    fallback:
+      name: "google-stt"
+      language: "tr-TR"
+
+  # ── TTS (Text-to-Speech) ──────────────────────────────────────────────────
+  tts:
+    piper:
+      model: "voice/Fahrettin-TTS/tr_TR-fahrettin-medium.onnx"
+      config: "voice/Fahrettin-TTS/tr_TR-fahrettin-medium.onnx.json"
+      language: "tr-TR"
+    edge:
+      voices:
+        - id: "tr-TR-AhmetNeural"
+          name: "Ahmet"
+        - id: "tr-TR-EmelNeural"
+          name: "Emel"
+
+  # ── LLM (Large Language Model) ────────────────────────────────────────────
+  llm:
+    ollama:
+      endpoint: "http://localhost:11434"
+      default_model: "qwen2.5:1.5b"
+      fallback_model: "qwen2.5:7b"     # İnternet yoksa yerel büyük model
+      embedding_model: "nomic-embed-text"
+      parameters:
+        temperature: 0.7
+        top_p: 0.9
+        max_tokens: 2048
+        repeat_penalty: 1.1
+    gemini:
+      model: "gemini-2.0-flash"
+      voice: "Charon"
+      parameters:
+        temperature: 0.7
+        top_p: 0.95
+        max_output_tokens: 4096
+
+  # ── Wake Word ─────────────────────────────────────────────────────────────
+  wake_word:
+    openwakeword:
+      model: "models/wake_word/jarvis.tflite"
+    porcupine:
+      keywords: ["JARVIS"]
+      model_path: ""
+
+  # ── Vision ────────────────────────────────────────────────────────────────
+  vision:
+    gemini:
+      model: "gemini-2.0-flash"
+      max_tokens: 1024
+
+  # ── Embedding ─────────────────────────────────────────────────────────────
+  embedding:
+    ollama:
+      model: "nomic-embed-text"
+      endpoint: "http://localhost:11434/api/embeddings"
+
+# Model indirme script'i
+download:
+  script: "scripts/download_models.sh"
+  models_dir: "models/"
+  auto_download: false

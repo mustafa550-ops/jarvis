@@ -1,0 +1,45 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+.claude/
+.swift-cache/
+.swift-home/
+
+config/api_keys.json
+memory/memory.json
+memory/phone_book.json
+
+# Runtime artifacts
+*.log
+logs/
+Icon/
+
+# Environment
+.env
+.env.*
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Test artifacts (root only)
+/test_*.py
+/test_*.wav
+/test_*.txt
+
+# Large model files
+voice/
+audio/lib/*.so*
+
+# Python venv
+.venv/
+
+# OpenCode session artifacts
+.omo/run-continuation/
+
+# Test audio files
+*.wav

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "rem-001",
+    "text": "Ekmek al",
+    "created": "2026-06-06T08:00:00",
+    "done": false
+  },
+  {
+    "id": "rem-002",
+    "text": "Proje teslimi",
+    "created": "2026-06-05T18:30:00",
+    "done": true
+  }
+]

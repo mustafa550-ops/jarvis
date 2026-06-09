@@ -1,0 +1,44 @@
+# JARVIS Windows — Gerekli paketler
+# Gemini AI istemci (yeni SDK - multimodal.py, screen_vision.py)
+google-genai>=1.0.0
+# Gemini AI istemci (eski SDK - core/multimodal.py fallback)
+google-generativeai>=0.8.0
+# Ses tanima (SpeechRecognition + pyaudio)
+SpeechRecognition>=3.10.0
+pyaudio>=0.2.13
+# Ses giriş/çıkış (MicrophoneStream, noise-suppressor)
+sounddevice>=0.4.6
+# Whisper (lokal STT)
+faster-whisper>=1.0.0
+# Ollama HTTP streaming (istemci tarafi)
+httpx>=0.27.0
+# Sistem bilgisi
+psutil>=5.9.0
+# LSP — Type checking (dev)
+basedpyright>=1.39.0
+# UI
+Pillow>=10.0.0
+# HTTP istekleri
+requests>=2.31.0
+# Ekran / fare / klavye kontrolu
+pyautogui>=0.9.54
+
+# === ZORUNLU BILIMSAL KUTUPHANELER ===
+# Tüm ses/VAD/STT/WakeWord modülleri için gerekli
+numpy>=1.26.0
+# YAML yapılandırma dosyaları için (config/voices.yaml, wake_word.yaml)
+pyyaml>=6.0
+
+# === OPSIYONEL BACKEND'LER ===
+# Kamera yakalama (cv2) - vision/camera_capture.py
+#opencv-python>=4.8.0
+# Silero VAD (PyTorch) - core/vad_engine.py (büyük ~2GB)
+#torch>=2.0.0
+# Dosya sistemi izleyici - actions/watchdog/file_watcher.py
+#watchdog>=4.0.0
+# Wake word: openWakeWord (önerilen)
+#openwakeword>=0.4.0
+# Wake word: Porcupine (Picovoice)
+#pvporcupine>=3.0.0
+# VAD: WebRTC (daha hizli, daha dogru)
+#webrtcvad>=2.0.6

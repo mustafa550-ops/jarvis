@@ -1,0 +1,22 @@
+[
+  {
+    "id": "local-1780798012314",
+    "title": "Toplanti",
+    "start_iso": "2026-06-07T00:00:00",
+    "end_iso": "2026-06-07T01:00:00",
+    "notes": "",
+    "location": "",
+    "calendar": "Windows Local",
+    "all_day": false
+  },
+  {
+    "id": "local-1780798041739",
+    "title": "Toplanti",
+    "start_iso": "2026-06-07T00:00:00",
+    "end_iso": "2026-06-07T01:00:00",
+    "notes": "",
+    "location": "",
+    "calendar": "Windows Local",
+    "all_day": false
+  }
+]

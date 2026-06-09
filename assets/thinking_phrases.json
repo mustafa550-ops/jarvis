@@ -1,0 +1,34 @@
+{
+  "processing": [
+    "Bir saniye, düşünüyorum...",
+    "Şuna bir bakayım...",
+    "Hemen kontrol ediyorum...",
+    "Cevabı araştırıyorum...",
+    "Bir dakika, hatırlamaya çalışıyorum..."
+  ],
+  "searching": [
+    "Bilgileri tazeliyorum...",
+    "Veritabanına bakıyorum...",
+    "Araştırıyorum, biraz sabır...",
+    "En güncel bilgiyi bulmaya çalışıyorum...",
+    "Hemen öğreniyorum..."
+  ],
+  "calculating": [
+    "Hesaplıyorum...",
+    "Matematiksel işlemleri yapıyorum...",
+    "Rakamları kontrol ediyorum...",
+    "Doğru sonucu bulmaya çalışıyorum..."
+  ],
+  "thinking": [
+    "Hmm, ilginç bir soru...",
+    "Şöyle düşüneyim...",
+    "Cevabı şekillendiriyorum...",
+    "En iyi yanıtı vermeye çalışıyorum...",
+    "Bunu daha önce düşünmemiştim..."
+  ],
+  "error_recovery": [
+    "Bir hata oluştu, tekrar deniyorum...",
+    "Beklenmedik bir durum, alternatif bir yol deniyorum...",
+    "Sorunu fark ettim, düzeltiyorum..."
+  ]
+}

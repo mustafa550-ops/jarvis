@@ -1,0 +1,18 @@
+[
+  {
+    "id": "evt-001",
+    "title": "Toplanti",
+    "date": "2026-06-08",
+    "time": "10:00",
+    "duration_min": 60,
+    "notes": "Haftalik ekip toplantisi"
+  },
+  {
+    "id": "evt-002",
+    "title": "Doktor randevusu",
+    "date": "2026-06-10",
+    "time": "14:30",
+    "duration_min": 30,
+    "notes": ""
+  }
+]

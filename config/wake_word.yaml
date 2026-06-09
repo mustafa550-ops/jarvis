@@ -1,0 +1,30 @@
+# Wake Word Yapılandırması
+# JARVIS'i aktifleştirmek için kullanılacak sesli komut ayarları
+
+engine: "openwakeword"  # openwakeword | porcupine | energy
+wake_word: "jarvis"     # Varsayılan uyandırma kelimesi
+
+# openWakeWord ayarları
+openwakeword:
+  model_path: ""  # Boş = built-in model (alexa, hey_jarvis vb.)
+  sensitivity: 0.5  # 0.0 (az hassas) - 1.0 (çok hassas)
+  custom_model: "models/wake_word/jarvis.tflite"
+
+# Porcupine (Picovoice) ayarları - API anahtarı gerektirir
+porcupine:
+  access_key: ""  # Picovoice Console'dan alınır
+  keyword_path: ""  # Özel keyword dosyası (.ppn)
+  sensitivity: 0.5
+
+# Enerji tabanlı basit algılama (son çare)
+energy:
+  threshold: 0.15      # Ses enerjisi eşiği
+  min_duration_ms: 500  # Minimum konuşma süresi
+  cooldown_ms: 2000     # Algılama sonrası bekleme
+
+# Genel ayarlar
+sample_rate: 16000
+frame_duration_ms: 30
+silence_timeout_ms: 5000  # 5 saniye sessizlik = timeout
+hold_time_ms: 200         # Wake word sonrası bekleme
+require_hold: true        # Wake word sonrası bekleme zorunlu mu?
