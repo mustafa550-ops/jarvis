@@ -3,6 +3,22 @@
 # Extracted from main.py to make the provider interface concrete.
 # ──────────────────────────────────────────────────────────────
 
+"""
+Gemini Provider — Google Gemini Live API ile sesli asistan.
+
+Gemini'nin multimodal Live API'sini kullanir:
+- Gercek zamanli sesli iletisim (WebSocket)
+- Built-in VAD, STT, TTS (Gemini halleder)
+- Tool calling (Google AI tool use)
+- Kesintisiz (barge-in) destegi
+
+API_KEY config/api_keys.json'dan okunur (gemini_api_key).
+Voice model config'den secilir (voice: Charon/Puck/Aoede/Kore).
+
+Bu provider Gemini backend secildiginde kullanilir (backend_type: "gemini").
+Ollama'dan farkli olarak tum ses isleme Gemini sunucusunda yapilir.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -21,16 +37,19 @@ from core.tool_registry import generate_gemini_declarations
 
 # Lazy imports (genai is heavy and not always needed)
 def _import_genai():
+    """Lazy import: google.genai."""
     from google import genai
     return genai
 
 
 def _import_types():
+    """Lazy import: google.genai.types."""
     from google.genai import types
     return types
 
 
 def _import_pyaudio():
+    """Lazy import: pyaudio."""
     import pyaudio
     return pyaudio
 
@@ -50,26 +69,31 @@ from core.text_utils import clean_transcript_text as _clean_transcript_text
 
 
 def _get_api_key():
+    """Config'den Gemini API anahtarini alir."""
     from app_config import get_app_config_value
     return str(get_app_config_value("gemini_api_key", "") or "")
 
 
 def _get_app_config_value(key: str, default: Any = None):
+    """Config'den deger okur (lazy import)."""
     from app_config import get_app_config_value
     return get_app_config_value(key, default)
 
 
 def _load_memory():
+    """Kullanici bellegini yukler (lazy import)."""
     from memory.memory_manager import load_memory
     return load_memory()
 
 
 def _format_memory_for_prompt(mem):
+    """Bellegi LLM prompt'una formatlar (lazy import)."""
     from memory.memory_manager import format_memory_for_prompt
     return format_memory_for_prompt(mem)
 
 
 def _load_system_prompt():
+    """Sistem prompt'unu yukler (lazy import)."""
     from main import load_system_prompt
     return load_system_prompt()
 
@@ -80,17 +104,21 @@ class GeminiProvider(BaseProvider):
 
     @property
     def name(self) -> str:
+        """Provider adi: 'gemini'."""
         return "gemini"
 
     @property
     def supports_streaming_audio(self) -> bool:
+        """Gemini, sesli streaming destekler."""
         return True
 
     @property
     def supports_tool_calls(self) -> bool:
+        """Gemini, function calling destekler."""
         return True
 
     def __init__(self):
+        """GeminiProvider baslatir."""
         super().__init__()
         self.session: Any = None
         self.audio_in_queue: asyncio.Queue | None = None
@@ -98,15 +126,23 @@ class GeminiProvider(BaseProvider):
         self._min_energy: float = 200.0
 
     async def stop(self):
+        """Provider'i durdurur, kaynaklari temizler."""
         self.session = None
         self.audio_in_queue = None
         self.out_queue = None
 
-    async def send_audio(self, data: bytes) -> None:
-        """Called from main.py's shared audio capture pipeline."""
+    def feed_audio(self, data: bytes) -> None:
+        """Called from the orchestrator's audio capture pipeline (16kHz PCM)."""
         q = self.out_queue
         if q is not None:
-            await q.put({"data": data, "mime_type": "audio/pcm"})
+            # Energy-based VAD: skip silence
+            arr = np.frombuffer(data, dtype=np.int16).astype(np.float32)
+            rms = float(np.sqrt(np.mean(arr ** 2)))
+            if rms >= self._min_energy:
+                try:
+                    q.put_nowait({"data": data, "mime_type": "audio/pcm"})
+                except asyncio.QueueFull:
+                    pass
 
     async def send_text(self, text: str) -> None:
         """Send text input to Gemini."""
@@ -163,44 +199,6 @@ class GeminiProvider(BaseProvider):
         while True:
             msg = await self.out_queue.get()
             await self.session.send_realtime_input(media=msg)
-
-    async def _listen_audio(self, stream):
-        """Read microphone, feed local modules, forward audio to Gemini."""
-        j = self._j()
-        print("[JARVIS] 🎤 Mikrofon başladı")
-        try:
-            while True:
-                data = await asyncio.to_thread(
-                    stream.read, CHUNK_SIZE, exception_on_overflow=False)
-
-                # ── Feed ALL local audio modules (shared pipeline) ──
-                ww = getattr(j, "wake_word", None)
-                if ww is not None:
-                    ww.feed_audio(data)
-                buf = getattr(j, "audio_buffer", None)
-                if buf is not None:
-                    buf.write(data)
-                sstt = getattr(j, "streaming_stt_engine", None)
-                if sstt is not None:
-                    sstt.feed_audio(data)
-                barge = getattr(j, "barge_in", None)
-                if barge is not None and barge.is_jarvis_speaking():
-                    barge.process_user_audio(data)
-
-                # ── Forward to Gemini if not speaking/paused/muted ──
-                with j._speaking_lock:
-                    jarvis_speaking = j._is_speaking
-                if not jarvis_speaking and not j.ui.muted and not j._paused:
-                    arr = np.frombuffer(data, dtype=np.int16).astype(np.float32)
-                    rms = float(np.sqrt(np.mean(arr ** 2)))
-                    if rms >= self._min_energy:
-                        await self.out_queue.put({
-                            "data": data,
-                            "mime_type": "audio/pcm"
-                        })
-        except Exception as e:
-            print(f"[JARVIS] ❌ Mikrofon: {e}")
-            raise
 
     async def _receive_audio(self):
         """Receive audio + transcriptions + tool calls from Gemini."""
@@ -305,29 +303,24 @@ class GeminiProvider(BaseProvider):
         pa_instance = pyaudio.PyAudio()
         fmt = pyaudio.paInt16
 
-        # ── Hardware check: enumerate devices once before the loop ──
-        input_devices = 0
+        # ── Check output devices for audio playback ──
         output_devices = 0
         try:
             from core.hardware_detector import HardwareDetector
-            hw_in = HardwareDetector.check_audio_input()
             hw_out = HardwareDetector.check_audio_output()
-            input_devices = len(hw_in.devices)
             output_devices = len(hw_out.devices)
         except ImportError:
-            # Fallback: quick PyAudio enumeration
             try:
                 cnt = pa_instance.get_device_count()
                 for i in range(cnt):
                     info = pa_instance.get_device_info_by_index(i)
-                    if int(info.get("maxInputChannels", 0) or 0) > 0:
-                        input_devices += 1
                     if int(info.get("maxOutputChannels", 0) or 0) > 0:
                         output_devices += 1
             except Exception:
                 pass
 
-        print(f"[Gemini Provider] Detected {input_devices} input, {output_devices} output device(s)")
+        if output_devices == 0:
+            print("[Gemini Provider] ⚠️ Hoparlör bulunamadı — ses çıkışı olmadan çalışılıyor.")
 
         while True:
             # ── Pause check ──
@@ -365,24 +358,9 @@ class GeminiProvider(BaseProvider):
                 j.ui.safe_call(j.ui.write_log, "SYS: JARVIS hazır. Dinliyorum...")
                 logging.debug("[RUNNER] write_log called")
 
-                # ── Open audio streams ──
-                input_stream = None
+                # ── Open audio output stream (input comes from orchestrator pipeline) ──
                 output_stream = None
                 try:
-                    if input_devices > 0:
-                        print("[JARVIS] 🎤 Giriş akışı açılıyor...")
-                        logging.debug("[RUNNER] Opening input stream")
-                        input_stream = await asyncio.to_thread(
-                            pa_instance.open,
-                            format=fmt, channels=CHANNELS,
-                            rate=SEND_SAMPLE_RATE, input=True,
-                            frames_per_buffer=CHUNK_SIZE,
-                        )
-                        logging.debug("[RUNNER] Input stream opened successfully")
-                    else:
-                        print("[JARVIS] ⚠️ Mikrofon bulunamadı — ses girişi olmadan çalışılıyor.")
-                        j.ui.safe_call(j.ui.write_log, "WARN: Mikrofon bulunamadı. Sadece yazılı komut kullanılabilir.")
-
                     if output_devices > 0:
                         print("[JARVIS] 🔊 Çıkış akışı açılıyor...")
                         logging.debug("[RUNNER] Opening output stream")
@@ -396,12 +374,11 @@ class GeminiProvider(BaseProvider):
                         print("[JARVIS] ⚠️ Hoparlör bulunamadı — ses çıkışı olmadan çalışılıyor.")
                         j.ui.safe_call(j.ui.write_log, "WARN: Hoparlör bulunamadı. Sadece yazılı yanıt verilecek.")
 
-                    # Start tasks only for available streams
-                    tasks = []
-                    if input_stream is not None:
-                        tasks.append(self._send_realtime())
-                        tasks.append(self._listen_audio(input_stream))
-                    tasks.append(self._receive_audio())
+                    # Start tasks: send realtime audio from queue, receive from API, play output
+                    tasks = [
+                        self._send_realtime(),
+                        self._receive_audio(),
+                    ]
                     if output_stream is not None:
                         tasks.append(self._play_audio(output_stream))
 
@@ -414,11 +391,5 @@ class GeminiProvider(BaseProvider):
                         print("[JARVIS] 🔊 Çıkış akışı kapatılıyor...")
                         try:
                             output_stream.close()
-                        except Exception:
-                            traceback.print_exc()
-                    if input_stream is not None:
-                        print("[JARVIS] 🎤 Giriş akışı kapatılıyor...")
-                        try:
-                            input_stream.close()
                         except Exception:
                             traceback.print_exc()

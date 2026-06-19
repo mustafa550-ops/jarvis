@@ -1,6 +1,30 @@
-# ── Ollama Provider ──────────────────────────────────────────
-# Ollama HTTP API provider — text-in/text-out, local STT + TTS.
-# Extracted from main.py to make the provider interface concrete.
+"""Ollama HTTP API Provider — text-in/text-out, local STT + TTS.
+
+Extracted from main.py to make the provider interface concrete.
+
+MIMARI:
+  BaseProvider'dan turer. Sesli asistan pipeline'inin tumunu yonetir:
+  - Mikrofon yakalama (orchestrator pipeline uzerinden)
+  - VAD (energy-based, RNNoise entegrasyonlu)
+  - STT (2 yol: single-shot STTEngine + real-time StreamingSTT)
+  - Ollama HTTP Chat (/api/chat) ile LLM yaniti
+  - Tool calling (local tool parser ile)
+  - TTS (Piper / Edge-TTS / spd-say)
+
+OZELLIKLER:
+  keep_alive: "30m" — model 30 dk bellekte kalir.
+  num_ctx: otomatik (model boyutuna gore) veya manuel (config).
+  Mega-ASR pre-warm: startup'ta background yukleme (configurable)."""
+#   num_ctx: otomatik (model boyutuna gore) veya manuel config'den
+#   Tool calling: "tool_name(arg1, arg2)" formatinda metin ayristirma
+#   RNNoise: gurultu bastirma (varsa)
+#
+# KONFIGURASYON (config/api_keys.json):
+#   backend_type: "ollama"
+#   ollama_model: "qwen2.5:7b" (veya auto-select)
+#   ollama_num_ctx: 0 (0=auto, >0=manual)
+#   ollama_tts_voice: "piper-fahrettin"
+#   mega_asr_prewarm: true
 # ──────────────────────────────────────────────────────────────
 
 from __future__ import annotations
@@ -100,22 +124,26 @@ def parse_local_tool_call(text: str) -> tuple | None:
 
 # ── Helpers (moved from main.py) ─────────────────────────────
 
-def _load_app_config():
+def _load_app_config() -> dict:
+    """Config JSON dosyasini yukler (lazy import)."""
     from app_config import load_app_config
     return load_app_config()
 
 
-def _load_memory():
+def _load_memory() -> dict:
+    """Kullanici bellegini yukler (lazy import)."""
     from memory.memory_manager import load_memory
     return load_memory()
 
 
-def _format_memory_for_prompt(mem):
+def _format_memory_for_prompt(mem: dict) -> str:
+    """Bellegi LLM prompt'una formatlar (lazy import)."""
     from memory.memory_manager import format_memory_for_prompt
     return format_memory_for_prompt(mem)
 
 
-def _load_system_prompt():
+def _load_system_prompt() -> str:
+    """Sistem prompt'unu yukler (lazy import)."""
     from main import load_system_prompt
     return load_system_prompt()
 
@@ -126,13 +154,16 @@ class OllamaProvider(BaseProvider):
 
     @property
     def name(self) -> str:
+        """Provider adi: 'ollama'."""
         return "ollama"
 
     MAX_STT_RESTARTS = 5
 
     def __init__(self):
+        """OllamaProvider baslatir."""
         super().__init__()
         self.input_queue: asyncio.Queue = asyncio.Queue()
+        self._audio_queue: asyncio.Queue = asyncio.Queue(maxsize=500)  # 16kHz PCM from orchestrator
         self._stt_task: asyncio.Task | None = None
         self._history: list[dict[str, str]] = []
         self._ollama_warned_quality = False
@@ -140,21 +171,101 @@ class OllamaProvider(BaseProvider):
         self._cached_config: dict = {}
         self._config_last_refresh: float = 0.0
         self._stt_restart_count: int = 0
+        self._warmup_done: bool = False
+        self._llm: Any = None  # lazy-loaded LocalLLM instance
+
+    def feed_audio(self, data: bytes) -> None:
+        """Called from orchestrator's audio pipeline (16kHz PCM, background thread)."""
+        try:
+            self._audio_queue.put_nowait(data)
+        except asyncio.QueueFull:
+            pass
+
+    def _get_llm(self) -> Any:
+        """Lazy-load LocalLLM instance."""
+        if self._llm is None:
+            try:
+                from core.local_llm import LocalLLM
+                self._llm = LocalLLM()
+            except Exception:
+                self._llm = object()  # sentinel — don't retry
+        return self._llm if not isinstance(self._llm, type(object)) else None
 
     def _get_config(self) -> dict:
+        """Config'den Ollama ayarlarini okur (1 sn cache)."""
         now = time.monotonic()
         if now - self._config_last_refresh > 1.0:
             self._cached_config = _load_app_config()
             self._config_last_refresh = now
         return self._cached_config
 
+    def _get_num_ctx(self) -> int:
+        """Context penceresi boyutunu otomatik veya manuel belirler.
+
+        Config'de ollama_num_ctx > 0 ise manuel değer kullanılır.
+        0 (veya eksik) ise model adındaki parametre sayısından
+        otomatik seçim yapılır — sesli asistanda TTFT'yi ~1-2s
+        tutacak değerler seçilir.
+        """
+        cfg = self._get_config()
+        manual = cfg.get("ollama_num_ctx", 0)
+        if manual > 0:
+            return manual
+
+        model = self._get_model_name().lower()
+        import re as _re
+        m = _re.search(r'(\d+\.?\d*)(?=[b])', model)
+        if m:
+            size = float(m.group(1))
+            if size <= 3:
+                return 4096
+            elif size <= 9:
+                return 8192
+            else:
+                return 16384
+        return 8192
+
+    async def _warmup(self):
+        """One-shot model warm-up. Runs exactly once per process lifetime."""
+        if self._warmup_done:
+            return
+        self._warmup_done = True
+        j = self._j()
+        import httpx
+        cfg = self._get_config()
+        warmup_model = self._get_model_name()
+        if not warmup_model:
+            return
+        j.ui.safe_call(j.ui.write_log, f"SYS: Model yükleniyor ({warmup_model})...")
+        j.set_state("THINKING")
+        try:
+            num_ctx = self._get_num_ctx()
+            warmup_opts = {"num_ctx": num_ctx} if num_ctx else {}
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                await client.post(
+                    "http://localhost:11434/api/chat",
+                    json={
+                        "model": warmup_model,
+                        "messages": [],
+                        "keep_alive": "30m",
+                        "options": warmup_opts,
+                    },
+                )
+            print(f"[Ollama] Warm-up tamamlandı: {warmup_model} (ctx={num_ctx})")
+        except Exception as e:
+            print(f"[Ollama] Warm-up hata (önemsiz): {e}")
+
     async def start(self, jarvis: Any) -> None:
+        """Ollama provider'ini baslatir, STT pipeline'ini kurar."""
         await super().start(jarvis)
         self._history = []
         self._ollama_warned_quality = False
         self._running = True
+        self._stt_restart_count = 0  # reset restart counter on provider restart
+        await self._warmup()  # warm-up once per provider lifecycle
 
     async def stop(self):
+        """Ollama provider'ini durdurur, kaynaklari temizler."""
         self._running = False
         if self._stt_task is not None and not self._stt_task.done():
             self._stt_task.cancel()
@@ -175,35 +286,22 @@ class OllamaProvider(BaseProvider):
         j = self._j()
         import httpx
 
-        # ── Start STT listener (with restart limit) ──
+        # Always start STT listener — Ollama handles its own microphone capture
+        # for STT independent of the shared audio pipeline.
         if self._stt_task is None or self._stt_task.done():
             if self._stt_restart_count >= self.MAX_STT_RESTARTS:
                 print(f"[Ollama] STT {self.MAX_STT_RESTARTS} kez yeniden baslatildi, durduruluyor.")
                 j.ui.safe_call(j.ui.write_log, "ERR: Ses tanima surekli hata veriyor, durduruldu.")
                 j.set_state("ERROR")
                 self._running = False
-                return
+                raise RuntimeError(
+                    f"STT {self.MAX_STT_RESTARTS} kez yeniden baslatildi — ses tanima devre disi."
+                )
             self._stt_restart_count += 1
             self._stt_task = asyncio.create_task(self._stt_listen_loop())
 
         if not self._history:
             self._history = []
-
-        # ── Model Warm-up ──
-        cfg = self._get_config()
-        warmup_model = cfg.get("ollama_model", "")
-        if warmup_model:
-            j.ui.safe_call(j.ui.write_log, f"SYS: Model yükleniyor ({warmup_model})...")
-            j.set_state("THINKING")
-            try:
-                async with httpx.AsyncClient(timeout=120.0) as client:
-                    await client.post(
-                        "http://localhost:11434/api/chat",
-                        json={"model": warmup_model, "messages": [], "keep_alive": "30m"},
-                    )
-                print(f"[Ollama] Warm-up tamamlandı: {warmup_model}")
-            except Exception as e:
-                print(f"[Ollama] Warm-up hata (önemsiz): {e}")
 
         # ── Proactive voice start ──
         pv = getattr(j, "proactive_voice", None)
@@ -269,6 +367,8 @@ class OllamaProvider(BaseProvider):
                 parts.append(mem_str + "\n\n")
             if transcript_str:
                 parts.append(transcript_str + "\n\n")
+            # Strip example conversations for small local models
+            sys_p = self._trim_system_prompt(sys_p)
             parts.append(sys_p)
             system_instruction = "\n".join(parts)
 
@@ -276,10 +376,10 @@ class OllamaProvider(BaseProvider):
             system_instruction += generate_ollama_tool_help()
 
             messages = [{"role": "system", "content": system_instruction}]
-            messages.extend(self._history[-20:])
+            messages.extend(self._history[-10:])  # fewer history entries for small models
             messages.append({"role": "user", "content": text})
 
-            ollama_model = cfg.get("ollama_model", "")
+            ollama_model = self._get_model_name()
             if not ollama_model:
                 j.ui.safe_call(j.ui.write_log, "ERR: Ollama modeli secilmemis.")
                 j.set_state("ERROR")
@@ -287,7 +387,7 @@ class OllamaProvider(BaseProvider):
 
             print(f"[Ollama] Model: {ollama_model}")
 
-            # ── Send to Ollama API ──
+            # ── Send to Ollama API (with fallback) ──
             response_text = ""
             try:
                 response_text = await self._ollama_chat(
@@ -295,10 +395,27 @@ class OllamaProvider(BaseProvider):
                 )
             except Exception as e:
                 err_detail = f"{type(e).__name__}: {e}"
-                print(f"[Ollama] Hata: {err_detail}")
-                j.ui.safe_call(j.ui.write_log, f"ERR: Ollama yanit veremiyor — {err_detail[:120]}")
-                j.set_state("ERROR")
-                continue
+                print(f"[Ollama] Hata (1. deneme): {err_detail}")
+                # Retry with minimal context – strip history, memory, transcript
+                if len(messages) > 1:
+                    fallback = [messages[0]]  # only system prompt
+                    fallback.append({"role": "user", "content": text})
+                    try:
+                        print("[Ollama] Kisa prompt ile tekrar deneniyor...")
+                        j.ui.safe_call(j.ui.write_log, "WARN: Ollama yavaş, kısa prompt ile tekrar deneniyor...")
+                        response_text = await self._ollama_chat(
+                            ollama_model, fallback, j
+                        )
+                    except Exception as e2:
+                        err_detail2 = f"{type(e2).__name__}: {e2}"
+                        print(f"[Ollama] Hata (2. deneme): {err_detail2}")
+                        j.ui.safe_call(j.ui.write_log, f"ERR: Ollama yanit veremiyor — {err_detail2[:120]}")
+                        j.set_state("ERROR")
+                        continue
+                else:
+                    j.ui.safe_call(j.ui.write_log, f"ERR: Ollama yanit veremiyor — {err_detail[:120]}")
+                    j.set_state("ERROR")
+                    continue
 
             print(f"[Ollama] Yanit uzunlugu: {len(response_text)} chars")
 
@@ -324,6 +441,7 @@ class OllamaProvider(BaseProvider):
                 # LocalFunctionCall adapter → _execute_tool
                 class LocalFunctionCall:
                     def __init__(self, name, args):
+                        """LocalFunctionCall baslatir."""
                         self.id = "local_call"
                         self.name = name
                         self.args = args
@@ -345,7 +463,7 @@ class OllamaProvider(BaseProvider):
                 self._history.append({"role": "user", "content": tool_result_prompt})
 
                 messages = [{"role": "system", "content": system_instruction}]
-                messages.extend(self._history[-20:])
+                messages.extend(self._history[-10:])  # fewer history entries for small models
 
                 response_text = ""
                 try:
@@ -361,9 +479,30 @@ class OllamaProvider(BaseProvider):
                 except Exception as e:
                     err_detail = f"{type(e).__name__}: {e}"
                     print(f"[Ollama Tool Follow-up] Hata: {err_detail}")
-                    j.ui.safe_call(j.ui.write_log, f"ERR: Ollama arac sonrasi yanit veremiyor — {err_detail[:120]}")
-                    j.set_state("ERROR")
-                    continue
+                    # Retry without history
+                    if len(messages) > 1:
+                        fallback = [messages[0], {"role": "user", "content": tool_result_prompt}]
+                        try:
+                            print("[Ollama Tool Follow-up] Kisa prompt ile tekrar deneniyor...")
+                            response_text = await self._ollama_chat(
+                                ollama_model, fallback, j
+                            )
+                            response_text = re.sub(
+                                r"<think>[\s\S]*?</think>", "", response_text,
+                                flags=re.IGNORECASE
+                            ).strip()
+                            if not response_text:
+                                raise ValueError("Empty response after retry")
+                        except Exception as e2:
+                            err_detail2 = f"{type(e2).__name__}: {e2}"
+                            print(f"[Ollama Tool Follow-up] Hata (2. deneme): {err_detail2}")
+                            j.ui.safe_call(j.ui.write_log, f"ERR: Ollama arac sonrasi yanit veremiyor — {err_detail2[:120]}")
+                            j.set_state("ERROR")
+                            continue
+                    else:
+                        j.ui.safe_call(j.ui.write_log, f"ERR: Ollama arac sonrasi yanit veremiyor — {err_detail[:120]}")
+                        j.set_state("ERROR")
+                        continue
 
                 j.ui.safe_call(j.ui.write_log, f"JARVIS: {response_text}")
                 await j._speak_response(response_text)
@@ -374,6 +513,38 @@ class OllamaProvider(BaseProvider):
                 j.ui.safe_call(j.ui.write_log, f"JARVIS: {response_text}")
                 await j._speak_response(response_text)
 
+    def _get_model_name(self) -> str:
+        """Get model name with auto-select fallback.
+
+        Sirasiyla:
+        1. LocalLLM.current_model (runtime secimi)
+        2. Config'deki ollama_model (manuel)
+        3. auto_select_ollama_model() (sistem kaynagi bazli)
+        4. qwen2.5:1.5b (hardcoded fallback)
+        """
+        llm = self._get_llm()
+        if llm is not None:
+            name = llm.current_model
+            if name:
+                return name
+        cfg = self._get_config()
+        name = cfg.get("ollama_model", "")
+        if name:
+            return name
+        from app_config import auto_select_ollama_model
+        return auto_select_ollama_model() or "qwen2.5:1.5b"
+
+    # ── Prompt trimming ─────────────────────────────────────
+
+    @staticmethod
+    def _trim_system_prompt(prompt: str) -> str:
+        """Strip example conversations – they bloat context for small local models."""
+        marker = "ÖRNEK KONUŞMALAR:"
+        idx = prompt.find(marker)
+        if idx != -1:
+            prompt = prompt[:idx].rstrip()
+        return prompt
+
     # ── Ollama HTTP Chat ─────────────────────────────────────
 
     async def _ollama_chat(
@@ -383,7 +554,10 @@ class OllamaProvider(BaseProvider):
         import httpx
 
         response_text = ""
-        async with httpx.AsyncClient(timeout=180.0) as client:
+        timeout = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=10.0)
+        num_ctx = self._get_num_ctx()
+        chat_opts = {"num_ctx": num_ctx} if num_ctx else {}
+        async with httpx.AsyncClient(timeout=timeout) as client:
             async with client.stream(
                 "POST", "http://localhost:11434/api/chat",
                 json={
@@ -391,6 +565,7 @@ class OllamaProvider(BaseProvider):
                     "messages": messages,
                     "stream": True,
                     "keep_alive": "30m",
+                    "options": chat_opts,
                 },
             ) as resp:
                 if resp.status_code != 200:
@@ -433,51 +608,25 @@ class OllamaProvider(BaseProvider):
     # ── STT Listen Loop ──────────────────────────────────────
 
     async def _stt_listen_loop(self):
-        """Main STT loop: PyAudio → STTEngine → input_queue."""
+        """Read 16kHz PCM from orchestrator queue → VAD → STT → input_queue."""
         j = self._j()
-        import pyaudio
         import numpy as np
         import traceback
         from core.audio_system.stt_engine import get_stt_engine
-        
+
         stt_engine = get_stt_engine()
         if not stt_engine.is_available():
             print("[Ollama STT] UYARI: STT motoru hazir degil!")
-            
-        p = pyaudio.PyAudio()
-        stream = None
-        target_rate = 16000
-        device_rate = 16000
-        
-        # Sudo altinda PulseAudio reddedilirse hw dogrudan 44100 veya 48000 Hz isteyebilir.
-        for rate in [16000, 48000, 44100]:
-            try:
-                stream = p.open(
-                    format=pyaudio.paInt16, channels=1, rate=rate,
-                    input=True, frames_per_buffer=2048,
-                )
-                device_rate = rate
-                print(f"[Ollama STT] PyAudio stream opened at {rate}Hz")
-                break
-            except Exception as e:
-                print(f"[Ollama STT] PyAudio {rate}Hz failed: {e}")
-                
-        if stream is None:
-            print("[Ollama STT] FATAL: Mikrofon baslatilamadi.")
-            p.terminate()
-            j.ui.write_log("ERR: Mikrofon baslatilamadi. Sesli komut calismayacak.")
-            return
 
-        # ── Noise profile ──
         _noise_floor = None
         _noise_frames = []
         FRAME_SIZE = 2048
-        
-        print("[Ollama STT] Dinleme başladı...")
+
+        print("[Ollama STT] Dinleme başladı (orchestrator pipeline)...")
         _speech_buf = bytearray()
         _silence_start = None
         _is_awake = False
-        
+
         try:
             while self._running:
                 cfg = _load_app_config()
@@ -485,115 +634,92 @@ class OllamaProvider(BaseProvider):
                     await asyncio.sleep(0.1)
                     continue
 
-                barge = getattr(j, "barge_in", None)
+                # Read 16kHz audio from orchestrator pipeline (non-blocking)
                 try:
-                    # Non-blocking read attempts to avoid deadlocks
-                    data = stream.read(FRAME_SIZE, exception_on_overflow=False)
-                    
-                    # ── Downsample if needed ──
-                    if device_rate != target_rate:
-                        import scipy.signal
-                        pcm = np.frombuffer(data, dtype=np.int16).astype(np.float32)
-                        samples = int(len(pcm) * target_rate / device_rate)
-                        resampled = scipy.signal.resample(pcm, samples)
-                        data = resampled.astype(np.int16).tobytes()
-                    
-                    # ── Feed shared modules ──
-                    ww = getattr(j, "wake_word", None)
-                    if ww is not None:
-                        ww.feed_audio(data)
-                    buf = getattr(j, "audio_buffer", None)
-                    if buf is not None:
-                        buf.write(data)
-                    sstt = getattr(j, "streaming_stt_engine", None)
-                    if sstt is not None:
-                        sstt.feed_audio(data)
-                        
-                    if barge is not None and barge.is_jarvis_speaking():
-                        barge.process_user_audio(data)
+                    data = await asyncio.wait_for(
+                        self._audio_queue.get(), timeout=0.05
+                    )
+                except asyncio.TimeoutError:
+                    continue
+
+                ww = getattr(j, "wake_word", None)
+
+                if j.ui.muted:
+                    continue
+
+                # Barge-in: skip if JARVIS is speaking
+                barge = getattr(j, "barge_in", None)
+                if barge is not None and barge.is_jarvis_speaking():
+                    continue
+
+                with j._speaking_lock:
+                    js = j._is_speaking
+                    sc = time.monotonic() - j._last_speech_end < j._speaking_cooldown
+                if js or sc:
+                    continue
+
+                # Wake word
+                if ww is not None:
+                    if j._wake_word_triggered:
+                        _is_awake = True
+                        j._wake_word_triggered = False
+                    if not _is_awake:
                         continue
 
-                    with j._speaking_lock:
-                        js = j._is_speaking
-                        sc = time.monotonic() - j._last_speech_end < j._speaking_cooldown
-                        
-                    if js or sc or j.ui.muted:
-                        continue
-                        
-                    # Wake word
-                    if ww is not None:
-                        if j._wake_word_triggered:
-                            _is_awake = True
-                            j._wake_word_triggered = False
-                        if not _is_awake:
-                            continue
-                            
-                    j.ui.set_state("LISTENING")
-                    
-                    # VAD (Energy-based fallback)
-                    arr = np.frombuffer(data, dtype=np.int16).astype(np.float32)
-                    rms = float(np.sqrt(np.mean(arr ** 2)))
-                    
-                    if _noise_floor is None:
-                        _noise_frames.append(rms)
-                        if len(_noise_frames) >= 10:
-                            _noise_frames.sort()
-                            _noise_floor = _noise_frames[len(_noise_frames) // 4]
-                            if _noise_floor < 1.0: _noise_floor = 50.0
-                            print(f"[Ollama STT] Noise floor: {_noise_floor:.1f}")
-                        is_speech = False
-                    else:
-                        _noise_floor = _noise_floor * 0.99 + rms * 0.01
-                        threshold = _noise_floor + 400.0 if _noise_floor else 2500.0
-                        is_speech = rms > threshold
-                        
-                    if is_speech:
-                        _speech_buf.extend(data)
-                        _silence_start = None
-                    else:
-                        if _speech_buf:
-                            if _silence_start is None:
-                                _silence_start = time.time()
-                            elif (time.time() - _silence_start) * 1000 > 500: # 500ms silence
-                                audio_bytes = bytes(_speech_buf)
-                                _speech_buf = bytearray()
-                                _silence_start = None
-                                _is_awake = False
-                                
-                                if len(audio_bytes) < 3200:
-                                    continue
-                                    
-                                j.ui.set_state("THINKING")
-                                text = ""
-                                try:
-                                    text = await asyncio.to_thread(
-                                        stt_engine.transcribe, audio_bytes, target_rate
-                                    )
-                                except Exception as e:
-                                    print(f"[Ollama STT] Transcription error: {e}")
-                                    
-                                if text and text.strip():
-                                    text = text.strip()
-                                    j._user_initiated = True
-                                    j.ui.write_log(f"Siz: {text}")
-                                    j.ui.mark_user_activity(True)
-                                    print(f"[Ollama STT] {text}")
-                                    await self.input_queue.put(text)
-                                else:
-                                    j.ui.set_state("LISTENING")
-                                    
-                except OSError as e:
-                    await asyncio.sleep(0.01)
-                except Exception as e:
-                    print(f"[Ollama STT] Loop error: {e}")
-                    traceback.print_exc()
-                    await asyncio.sleep(0.5)
+                j.ui.set_state("LISTENING")
+
+                # VAD (Energy-based)
+                arr = np.frombuffer(data, dtype=np.int16).astype(np.float32)
+                rms = float(np.sqrt(np.mean(arr ** 2)))
+
+                if _noise_floor is None:
+                    _noise_frames.append(rms)
+                    if len(_noise_frames) >= 10:
+                        _noise_frames.sort()
+                        _noise_floor = _noise_frames[len(_noise_frames) // 4]
+                        if _noise_floor < 1.0:
+                            _noise_floor = 50.0
+                        print(f"[Ollama STT] Noise floor: {_noise_floor:.1f}")
+                    is_speech = False
+                else:
+                    _noise_floor = _noise_floor * 0.99 + rms * 0.01
+                    threshold = _noise_floor + 400.0 if _noise_floor else 2500.0
+                    is_speech = rms > threshold
+
+                if is_speech:
+                    _speech_buf.extend(data)
+                    _silence_start = None
+                else:
+                    if _speech_buf:
+                        if _silence_start is None:
+                            _silence_start = time.time()
+                        elif (time.time() - _silence_start) * 1000 > 500:
+                            audio_bytes = bytes(_speech_buf)
+                            _speech_buf = bytearray()
+                            _silence_start = None
+                            _is_awake = False
+
+                            if len(audio_bytes) < 3200:
+                                continue
+
+                            j.ui.set_state("THINKING")
+                            text = ""
+                            try:
+                                text = await asyncio.to_thread(
+                                    stt_engine.transcribe, audio_bytes, 16000
+                                )
+                            except Exception as e:
+                                print(f"[Ollama STT] Transcription error: {e}")
+
+                            if text and text.strip():
+                                text = text.strip()
+                                j._user_initiated = True
+                                j.ui.write_log(f"Siz: {text}")
+                                j.ui.mark_user_activity(True)
+                                print(f"[Ollama STT] {text}")
+                                await self.input_queue.put(text)
+                            else:
+                                j.ui.set_state("LISTENING")
+
         except Exception:
             traceback.print_exc()
-        finally:
-            try:
-                if stream:
-                    stream.close()
-                p.terminate()
-            except Exception:
-                pass

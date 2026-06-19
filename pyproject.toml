@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jarvis"
+version = "2.0.0"
+description = "J.A.R.V.I.S — Gerçek zamanlı sesli asistan"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Adler ASİ"},
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["core", "actions"]
+omit = ["*/__pycache__/*", "*.so"]
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 0
+
+[tool.setuptools.packages.find]
+include = [
+    "core*",
+    "actions*",
+    "audio*",
+    "ui*",
+    "skills*",
+    "tools*",
+    "memory*",
+    "vision*",
+    "config*",
+    "scripts*",
+]

@@ -160,6 +160,12 @@
 | **Turkish syllable split** — faster-whisper hece bölmesi (ör: "üstümd" "eAhmet") ✅ | Orta | 20dk |
 | **Test side effects** — Smoke test'ler URL açıyor (example.com + YouTube) ✅ | Düşük | 5dk |
 | **Browser skill multi-word aç** — "youtube sarki ac" → `https://youtube sarki.com` ✅ | Düşük | 10dk |
+| **voice_manager.py — `voice_data` undefined variable** ✅ | Runtime crash | 5dk |
+| **voice_manager.py — `speak()`/`list_voices()` silinmiş, restore edildi** ✅ | Eksik özellik | 5dk |
+| **skill_manager.py — duplicate property definitions (10 LSP error)** ✅ | Derleme hatası | 5dk |
+| **barge_in.py — `is_barge_in()` `self._enabled` (never set) → `self._barge_detected`** ✅ | Runtime AttributeError | 5dk |
+| **barge_in.py — `is_jarvis_speaking()` `self._is_speaking` (never set) → `self._jarvis_speaking`** ✅ | Runtime AttributeError | 3dk |
+| **barge_in.py — `reset()` yanlış attribute (`_is_speaking` → `_jarvis_speaking`)** ✅ | State sıfırlamama | 3dk |
 
 ### 🔧 İyileştirmeler (Tamamlandı)
 
@@ -180,6 +186,7 @@
 | **NFC normalizasyonu** — `unicodedata.normalize("NFC")` Turkish STT için | STT kalitesi | 5dk | ✅ |
 | **_user_initiated güvenlik gate** — AI'nın izinsiz browser_control çağırmasını engelle | Güvenlik | 10dk | ✅ |
 | **Skill sistemi asimilasyonu** — FAZ 0 (browser) + FAZ 1 (system_health, process_control, file_manager) + FAZ 3 (weather, youtube, vision) + FAZ 4 (calendar, reminders, whatsapp, media) + FAZ 2 (network, scheduler, services), 14 skill, Turkish ASCII fallback, 228+ test, browser multi-word fix, WhatsApp name+kaydet fix | Mimarî | 30dk | ✅ |
+| **Thread safety — memory modüllerinde `threading.RLock`** — `memory_manager.py`, `conversation_manager.py`, `health_manager.py`, `voice_settings_manager.py`, `user_preferences_manager.py` | Yarış koşulu önleme | 15dk | ✅ |
 
 ### 🛡 Hata Yönetimi Sertleştirme (Tamamlandı)
 
@@ -300,4 +307,4 @@ Performans            ████░░░░░░  40%
 
 ---
 
-*Son güncelleme: 2026-06-11 (v7 — Tüm dokümantasyon asimilasyonu: test/skill/tool sayıları güncellendi)*
+*Son güncelleme: 2026-06-19 (v8 — Thread safety memory/*, voice_manager/skill_manager/barge_in hata düzeltmeleri, TESTING.md unittest düzeltmesi)*

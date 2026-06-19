@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pytest-core
+        name: pytest core tests
+        entry: .venv/bin/python -m pytest tests/test_barge_in.py tests/test_orchestrator.py tests/test_main_handlers.py tests/test_gemini_provider.py tests/test_ollama_provider.py --tb=short -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

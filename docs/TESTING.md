@@ -1,313 +1,225 @@
-# J.A.R.V.I.S — Test Rehberi
+# J.A.R.V.I.S — Test ve Diagnostic Rehberi
 
-> Test altyapisi, calistirma komutlari, yeni test ekleme kurallari.
-
----
-
-## Test Altyapisi
-
-| Ozellik | Deger |
-|---------|-------|
-| Framework | `unittest` |
-| Runner | `.venv/bin/python3 -m unittest` |
-| Toplam test | 1261 |
-| Basarisiz | 0 |
-| Atlanan | 2 |
-| Mock | `@patch` (sadece yan etki testlerinde) |
+> İki test katmanı: `tests/` klasöründe **pytest/unittest** (geliştirici) + UI üzerinden **built-in diagnostic skill** (kullanıcı).
 
 ---
 
-## Testleri Calistirma
+## Genel Bakış
 
-### Tum Testler
+JARVIS'te iki test altyapısı bulunur:
+
+### 1. Birim Testleri (`tests/` klasörü) — Geliştirici
+
+**86 test dosyası**, pytest + unittest ile. Gerçek production kodunu gerçek veriyle test eder. Mock sadece donanım bağımlılıklarında (mikrofon, ses kartı) kullanılır.
 
 ```bash
-# Linux/macOS
-.venv/bin/python3 -m unittest discover tests -v
+# Tüm testleri koş
+python -m pytest tests/ -q
 
-# Windows
-.venv\Scripts\python.exe -m unittest discover tests -v
+# Belirli modül testi
+python -m pytest tests/test_barge_in.py -v
+
+# Smoke test
+python -m pytest tests/test_smoke.py -v
 ```
 
-### Smoke Test (Hizli)
+### 2. Diagnostic Skill (UI üzerinden) — Kullanıcı
 
-```bash
-.venv/bin/python3 -m unittest tests.test_smoke -v
+Tkinter UI içinden `debugging_jarvis` skill'i ile 7 kategoride teşhis:
+
 ```
-
-### Tek Modul
-
-```bash
-.venv/bin/python3 -m unittest tests.test_skill_manager -v
-.venv/bin/python3 -m unittest tests.test_vad_engine -v
-.venv/bin/python3 -m unittest tests.test_text_utils -v
-```
-
-### Tek Test Metodu
-
-```bash
-.venv/bin/python3 -m unittest tests.test_text_utils.TestTextUtils.test_clean_transcript_text -v
-```
-
-### Build Script
-
-```bash
-# Linux/macOS
-./build.sh
-
-# Windows
-.\build.ps1
+UI input (text/voice)
+    │
+    ├── "test" veya "tüm testler"
+    │       → debugging_jarvis skill'i
+    │       → _run_full_diagnostics()
+    │       → Tüm kategorileri art arda çalıştırır
+    │       → Sonuç UI'da gösterilir
+    │
+    ├── "ses testi" / "UI dondu" / "sistem kontrol"
+    │       → debugging_jarvis skill'i
+    │       → İlgili kategori teşhisi
+    │       → Sonuç UI'da gösterilir
+    │
+    └── "sistem durum" / "cpu kaç"
+            → system_health skill'i
+            → CPU/RAM/disk bilgisi
+            → Sonuç UI'da gösterilir
 ```
 
 ---
 
-## Test Dosya Yapisi
+## Diagnostic Kategorileri
 
-```
-tests/
-+-- __init__.py
-+-- conftest.py                   # Test yapilandirmasi
-+-- test_aca_subsystem.py         # ACA subsystem tests
-+-- test_actions.py               # Action modulleri
-+-- test_app_config.py            # Yapilandirma testleri
-+-- test_audio_buffer.py          # Audio buffer
-+-- test_audio_queue.py           # Audio queue (voice orchestration)
-+-- test_audio_system.py          # Audio system (TTS/STT)
-+-- test_barge_in.py              # Barge-in detektoru
-+-- test_browser.py               # Browser action
-+-- test_calendar.py              # Calendar action
-+-- test_config.py                # Config okuma
-+-- test_conversation_transcript.py
-+-- test_cron_web_ui.py           # Cron web UI
-+-- test_disk_predictor.py        # Disk tahmin
-+-- test_draw_utils.py            # UI draw utils
-+-- test_emotion_tts.py           # Emotion TTS
-+-- test_fahrettin_vad.py         # Fahrettin VAD
-+-- test_file_guardian.py         # File guardian
-+-- test_file_watcher.py          # File watcher
-+-- test_health.py                # Health modulu
-+-- test_local_llm.py             # Local LLM
-+-- test_location.py              # Location action
-+-- test_main.py                  # main.py import
-+-- test_media.py                 # Media action
-+-- test_memory.py                # Memory manager
-+-- test_microphone.py            # Microphone stream
-+-- test_multimodal.py            # Multimodal engine
-+-- test_network_anomaly.py       # Network anomaly
-+-- test_network_monitor.py       # Network monitor
-+-- test_noise_suppressor.py      # RNNoise suppressor
-+-- test_open_app.py              # Open app action
-+-- test_orb_canvas.py            # UI orb canvas
-+-- test_pipeline.py              # Pipeline testleri
-+-- test_proactive_voice.py       # Proactive voice
-+-- test_process_manager.py       # Process manager
-+-- test_process_timeline.py      # Process timeline
-+-- test_provider_base.py         # Provider base
-+-- test_reminders.py             # Reminders action
-+-- test_screen_vision.py         # Screen vision
-+-- test_service_monitor.py       # Service monitor
-+-- test_shell.py                 # Shell action
-+-- test_skill_debugging.py       # Debugging skill test
-+-- test_skill_file_manager.py    # File manager skill test
-+-- test_skill_greeting.py        # Greeting skill test
-+-- test_skill_manager.py         # Skill manager
-+-- test_skill_process_control.py # Process control skill test
-+-- test_skill_scheduler.py       # Scheduler skill test
-+-- test_skill_services.py        # Services skill test
-+-- test_skill_system_health.py   # System health skill test
-+-- test_skill_voice_coding.py    # Voice coding skill test
-+-- test_skills.py                # Skill modulleri
-+-- test_smoke.py                 # Smoke test (tum moduller, ~1121 test)
-+-- test_sound_manager.py         # Sound manager
-+-- test_state_machine.py         # Voice state machine
-+-- test_state_ui.py              # State UI integration
-+-- test_streaming_stt.py         # Streaming STT
-+-- test_streaming_tts.py         # Streaming TTS
-+-- test_sys_info.py              # Sys info action
-+-- test_system_cron.py           # System cron
-+-- test_system_doctor.py         # System doctor
-+-- test_text_utils.py            # Text utils
-+-- test_thinking_aloud.py        # Thinking aloud
-+-- test_tool_dispatch.py         # Tool dispatch tests
-+-- test_tool_registry.py         # Tool registry
-+-- test_tts.py                   # TTS action
-+-- test_ui.py                    # UI import
-+-- test_ui_text_utils.py         # UI text utils
-+-- test_vad_engine.py            # VAD engine
-+-- test_voice_manager.py         # Voice manager
-+-- test_voice_memory.py          # Voice memory
-+-- test_wake_word.py             # Wake word
-+-- test_weather.py               # Weather action
-+-- test_whatsapp.py              # WhatsApp action
-+-- test_windows_utils.py         # Windows utils
-+-- test_youtube.py               # YouTube action
-+-- manual/                       # Manuel test betikleri
-|   +-- test_audio.py / test_audio2.py / test_audio3.py
-|   +-- test_full_pipeline.py
-|   +-- test_mic.py / test_mic_nosudo.py
-|   +-- test_mic_stt.py / test_mic_stt2.py
-|   +-- test_mic_user.py
-|   +-- test_oww.py
-|   +-- test_pyaudio_play.py
-|   +-- test_stt_user.py / test_stt_user2.py
-|   +-- test_sudo_play.py
-|   +-- test_tts_play.py / test_tts_user.py
-|   +-- test_ui_stt.py
-|   +-- test_vad.py
-```
+| Kategori | Keyword Örnekleri | Çalıştırdığı Fonksiyon | Ne Kontrol Eder? |
+|----------|-------------------|------------------------|------------------|
+| 🔴 Ses | "ses gelmiyor", "mikrofon bozuk", "konusma yok" | `_check_audio_system()` | ALSA, PulseAudio, PipeWire, Python kütüphaneleri, RNNoise, ses seviyeleri |
+| 🟡 UI | "UI dondu", "pencere acilmiyor", "thread hatasi" | `_check_ui_system()` | Thread listesi, main thread, Tkinter durumu |
+| 🟢 Skill | "skill calismiyor", "import hatasi", "hotreload" | `_check_skill_system()` | Skill dizinleri, import kontrolü, route fonksiyonları |
+| 🔵 Sistem | "sistem hatasi", "port cakismasi", "json parse" | `_check_system_platform()` | Platform, portlar, ses izinleri, grup üyelikleri, bellek |
+| 🌐 Ağ | "baglanti yok", "gemini hatasi", "ollama baglanamiyor" | `_check_network()` | İnternet, Ollama, Gemini API key, model durumu |
+| 📋 Log | "log goster", "son satirlari oku", "kayit gor" | `_check_logs()` | `logs/jarvis.log` analizi, hata istatistikleri |
+| ⚪ Genel | "hata var", "sorun", "debug", "calismiyor" | `_general_diagnostics()` | Platform, kritik dosyalar, bellek, CPU, öneriler |
+| 🔍 Full Test | "test", "test yap", "tüm testler", "full kontrol", "diagnostik" | `_run_full_diagnostics()` | **Tüm kategorileri art arda çalıştırır** |
 
 ---
 
-## Test Turleri
+## Diagnostic Çalıştırma
 
-### Smoke Test (`test_smoke.py`)
+### UI Üzerinden (Önerilen)
 
-Her modulu import eder, hata vermediklerini dogrular:
+JARVIS çalışırken input kutusuna aşağıdaki komutları yazın:
 
-```python
-class TestSmoke(unittest.TestCase):
-    def test_app_config_import(self):
-        import app_config
-        self.assertTrue(hasattr(app_config, "load_app_config"))
-    
-    def test_actions_import(self):
-        from actions import open_app
-        self.assertTrue(callable(open_app.open_app))
-```
+| Komut | Ne Yapar? |
+|-------|-----------|
+| `test` | Tüm sistem diagnostic'lerini çalıştırır |
+| `tüm testler` | Aynı — full diagnostic suite |
+| `full kontrol` | Aynı |
+| `diagnostik` | Aynı |
+| `ses testi` | Ses sistemi teşhisi (mikrofon, hoparlör, RNNoise) |
+| `ses gelmiyor` | Ses sorunlarına odaklı teşhis |
+| `UI dondu` | UI/Tkinter thread durumu |
+| `sistem` | Platform, port, bellek teşhisi |
+| `ollama baglanamiyor` | Ollama/Gemini bağlantı testi |
+| `log goster` | Log dosyası hata analizi |
+| `hata var` | Genel sistem durumu özeti |
+| `sistem durum` | CPU/RAM/disk sağlık bilgisi |
 
-### Pure Fonksiyon Testleri
-
-Ornek: `test_text_utils.py`
-
-```python
-class TestTextUtils(unittest.TestCase):
-    def test_fix_turkish_syllable_split_basic(self):
-        result = fix_turkish_syllable_split("Naber nasilsin iyi misin")
-        self.assertEqual(result, "Naber nasilsin iyi misin")
-
-    def test_fix_turkish_syllable_split_merged(self):
-        result = fix_turkish_syllable_split("İ stanbul")
-        self.assertEqual(result, "İstanbul")
-```
-
-### Error Path Testleri
-
-```python
-def test_system_health_mocked(self, mock_psutil):
-    """psutil veri dondurmezse default degerler kullanilir."""
-    mock_psutil.virtual_memory.return_value.percent = None
-    result = get_system_health()
-    self.assertIn("hata", result["memory"]["status"])
-```
-
-### Mock ile Yan Etki Testleri
-
-Tarayici, shell, URL acma gibi yan etkiler `@patch` ile izole edilir:
-
-```python
-@patch("webbrowser.open")
-def test_browser_control_url(self, mock_open):
-    result = browser_control("open_url", url="https://example.com")
-    mock_open.assert_called_once_with("https://example.com")
-    self.assertIn("aciliyor", result.lower())
-```
-
----
-
-## Yeni Test Ekleme Kurallari
-
-### 1. Modul Bazli Test
-
-Her yeni modul icin yeni test dosyasi:
+### Terminalden (Geliştirici)
 
 ```bash
-touch tests/test_yeni_modul.py
+# Diagnostic skill'ini doğrudan test et
+python3 -c "
+from skills.debugging_jarvis.debugging_jarvis_skill import classify_debug_intent, execute_debug
+cat = classify_debug_intent('test')
+print(f'Kategori: {cat}')
+print(execute_debug(cat))
+"
 ```
 
-### 2. Basit Import Testi
+### Skill Manager Durumu
 
-```python
-# tests/test_yeni_modul.py
-import unittest
-
-class TestYeniModul(unittest.TestCase):
-    """Yeni Modul testleri"""
-
-    def test_import(self):
-        """Modul import edilebilmeli"""
-        try:
-            import yeni_modul
-        except ImportError:
-            self.fail("yeni_modul import edilemedi")
+```bash
+python3 -c "
+from core.skill_manager import get_skill_manager
+sm = get_skill_manager()
+print('Skill list:', sm.list_skills())
+print('Stats:', sm.get_stats())
+"
 ```
 
-### 3. Pure Fonksiyon Testi
+---
 
+## Skill Doğrulama Testleri
+
+Her skill aşağıdaki kriterlere göre test edilebilir:
+
+### 1. Import Testi
 ```python
-def test_function_basic(self):
-    """Temel fonksiyon dogru calismali"""
-    result = yeni_modul.fonksiyon("input")
-    self.assertEqual(result, "beklenen_output")
-
-def test_function_edge_case(self):
-    """Edge case'ler dogru calismali"""
-    result = yeni_modul.fonksiyon("")
-    self.assertIsNone(result)
+from skills.<name>.<name>_skill import route_<name>_request
+assert route_<name>_request is not None
 ```
 
-### 4. Mock Testi (Yan Etki Varsa)
-
+### 2. Route Testi
 ```python
-@patch("yeni_modul.subprocess.run")
-def test_function_side_effect(self, mock_run):
-    """subprocess cagrisi mocklanmali"""
-    mock_run.return_value.returncode = 0
-    result = yeni_modul.fonksiyon("test")
-    self.assertTrue(result)
+result = route_<name>_request("tetikleyici kelime")
+assert result is not None, "Skill tetiklenmedi"
+assert isinstance(result, str), "String dönmeli"
 ```
 
-### 5. Smoke Test'e Ekle
-
+### 3. No-Match Testi
 ```python
-# tests/test_smoke.py
-class TestYeniModulSmoke:
-    def test_import_yeni_modul(self):
-        import yeni_modul
+result = route_<name>_request("ilgisiz kelime")
+assert result is None, "Eşleşmeyen metin None dönmeli"
+```
+
+### 4. Hata Yönetimi
+```python
+try:
+    result = route_<name>_request(None)
+    assert result is None, "None input None dönmeli"
+except Exception:
+    pass  # Bazı skill'ler None'da exception fırlatabilir
+```
+
+---
+
+## Sık Kullanılan Debug Komutları
+
+### UI Debug Paneli
+
+JARVIS çalışırken **Settings → DEBUG** sekmesinde runtime hata kayıtları görüntülenir. `write_debug()` ile eklenen tüm error/warn/info mesajları burada listelenir.
+
+### Thread Durumu
+
+```bash
+# Tüm thread'leri listele
+python3 -c "
+import threading
+for t in threading.enumerate():
+    print(f'{t.name} ({t.ident}) - {\"daemon\" if t.daemon else \"normal\"} - {\"canlı\" if t.is_alive() else \"ölü\"}')"
+```
+
+### Log Analizi
+
+```bash
+# Son 50 satır
+tail -50 logs/jarvis.log
+
+# Sadece ERROR/CRITICAL satırları
+grep -E "ERROR|CRITICAL|Traceback" logs/jarvis.log | tail -20
+
+# Thread bazlı sorgulama
+grep "ThreadName" logs/jarvis.log | sort -u
+```
+
+### Port Kontrolü
+
+```bash
+# Ollama portu
+curl -s --max-time 3 http://localhost:11434/api/tags | python3 -m json.tool
+
+# Cron Web UI portu
+ss -tlnp | grep 8765
 ```
 
 ---
 
 ## Test Prensipleri
 
-| Kural | Aciklama |
+| Kural | Açıklama |
 |-------|----------|
-| **Framework** | Sadece `unittest`, pytest yok |
-| **Mock** | Sadece yan etki testlerinde (URL acma, shell, dosya) |
-| **Coverage** | 19+ modul, 0 skip hedefi |
-| **Pure fonksiyon** | Input-output dogrulama, mock yok |
-| **Error path** | Her hata senaryosu icin en az 1 test |
-| **Yeni modul** = | Yeni test class'i `tests/test_smoke.py` veya yeni dosya |
+| **Birim test** | `tests/` klasöründe pytest + unittest, mock sadece donanım bağımlılıklarında |
+| **Skill doğrulama** | Her yeni skill için route/import/no-match testleri `tests/test_skill_*.py` |
+| **Diagnostic kapsamı** | Ses → UI → Skill → Sistem → Ağ → Log → Genel (7 kategori) |
+| **Full suite** | "test" komutu ile tüm kategoriler sırayla çalışır |
+| **Hata durumu** | Her diagnostic try/except ile sarılıdır, tek hata tüm suite'i durdurmaz |
+| **Çalıştırma** | `python -m pytest tests/ -q` — tüm birim testleri |
+| **Ekleme** | Yeni test dosyası: `tests/test_<modul>.py`, unittest.TestCase ile |
 
 ---
 
-## Bilinen Test Sorunlari
+## Diagnostic Genişletme
 
-### Atlanan Testler (2 adet)
+Yeni bir diagnostic kategorisi eklemek için:
 
-1. `test_disk_predictor` - Disk izni gerektiren test (sudo ile calisir)
-2. `test_network_monitor` - Belirli ag durumlarinda atlanir
+1. `skills/debugging_jarvis/debugging_jarvis_skill.py` dosyasında:
+   - Yeni kategori sabiti ekleyin (örn: `CAT_NEW = "yeni"`)
+   - `CATEGORY_LABELS` sözlüğüne ekleyin
+   - Teşhis fonksiyonunu yazın (`def _check_new_system()`)
+   - `CATEGORY_HANDLERS` sözlüğüne ekleyin
+   - `classify_debug_intent()`'e yeni regex pattern'i ekleyin
+   - `_run_full_diagnostics()`'a yeni kategoriyi ekleyin
 
-### pyaudio Bagimliligi
+2. Gerekirse `_general_diagnostics()`'a yeni kontroller ekleyin.
 
-Pek cok test `import pyaudio` kontrolu yapar. pyaudio yoksa:
-- `self.skipTest("pyaudio mevcut degil")` ile atlanir
-- Hata vermez, dogrudan gecer
+---
 
-### Ses Donanim Testleri
+## Bilinen Diagnostic Sınırlamaları
 
-Manuel testler (`tests/manual/`) gercek ses donanimi gerektirir:
-- `test_mic.py` - Mikrofon testi
-- `test_oww.py` - Wake word testi
-- `test_mic_stt.py` - STT testi
-
-Bu testler CI'da calismaz, sadece gelistirme sirasinda kullanilir.
+| Durum | Açıklama |
+|-------|----------|
+| Bazı teşhisler Linux komutları gerektirir | `arecord`, `pactl`, `amixer` — Windows/macOS'ta çalışmaz |
+| Ollama/Gemini teşhisi | İlgili servis çalışıyor olmalı |
+| Ses donanımı teşhisi | Gerçek ses donanımı gerektirir (sanal ortamda sınırlı) |
+| Log dosyası | `logs/jarvis.log` yoksa log analizi yapılamaz |

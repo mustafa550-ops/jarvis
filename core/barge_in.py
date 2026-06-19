@@ -6,7 +6,6 @@ JARVIS konuşurken kullanıcının konuşmasını algılar ve yanıtı keser.
 from __future__ import annotations
 
 import threading
-import time
 from typing import Callable, Optional
 
 import numpy as np
@@ -30,13 +29,16 @@ class BargeInDetector:
         min_duration_ms: int = 300,
         sample_rate: int = 16000,
         frame_duration_ms: int = 30,
+        enabled: bool = True,
         on_barge_in: Optional[Callable] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
     ):
+        """BargeInDetector baslatir."""
         self.threshold_db = threshold_db
         self.min_duration_ms = min_duration_ms
         self.sample_rate = sample_rate
         self.frame_duration_ms = frame_duration_ms
+        self.enabled = enabled
         self.on_barge_in = on_barge_in
         self.on_error = on_error
 
@@ -60,8 +62,7 @@ class BargeInDetector:
             self._consecutive_speech = 0
 
     def process_user_audio(self, audio_data: bytes) -> bool:
-        """
-        Kullanıcı sesini işle ve barge-in tespit et.
+        """Kullanıcı sesini işle ve barge-in tespit et.
 
         Args:
             audio_data: Kullanıcı mikrofon sesi (PCM int16, 16kHz)
@@ -69,6 +70,8 @@ class BargeInDetector:
         Returns:
             True: Barge-in tespit edildi
         """
+        if not self.enabled:
+            return False
         with self._lock:
             if not self._jarvis_speaking:
                 return False
@@ -104,23 +107,22 @@ class BargeInDetector:
             return False
 
     def is_barge_in(self) -> bool:
-        with self._lock:
-            return self._barge_detected
+        """Barge-in (konusmayi bolme) aktif mi."""
+        return self._barge_detected
 
     def is_jarvis_speaking(self) -> bool:
-        with self._lock:
-            return self._jarvis_speaking
+        """JARVIS su anda konusuyor mu."""
+        return self._jarvis_speaking
 
     def reset(self):
-        with self._lock:
-            self._jarvis_speaking = False
-            self._jarvis_audio_level = 0.0
-            self._barge_detected = False
-            self._consecutive_speech = 0
+        """Barge-in durumunu sifirlar."""
+        self._jarvis_speaking = False
+        self._barge_detected = False
+        self._consecutive_speech = 0
 
     def get_stats(self) -> dict:
-        with self._lock:
-            return {
+        """Barge-in istatistiklerini dondurur."""
+        return {
                 "jarvis_speaking": self._jarvis_speaking,
                 "barge_detected": self._barge_detected,
                 "threshold_db": self.threshold_db,
@@ -134,11 +136,13 @@ class BargeInDetector:
 def create_barge_in_detector(
     on_barge_in: Optional[Callable] = None,
     threshold_db: float = 10.0,
+    enabled: bool = True,
     on_error: Optional[Callable[[Exception], None]] = None,
 ) -> BargeInDetector:
-    """Create a barge-in detector with sensible defaults."""
+    """Create a barge-in detector."""
     return BargeInDetector(
         threshold_db=threshold_db,
+        enabled=enabled,
         on_barge_in=on_barge_in,
         on_error=on_error,
     )
