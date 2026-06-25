@@ -48,8 +48,10 @@ def get_ollama_tts_voices() -> list[dict]:
                     voices.append({"id": "edge-ahmet", "label": "Edge – Ahmet Neural (Türkçe Erkek)"})
                 elif line.startswith("tr-TR-EmelNeural"):
                     voices.append({"id": "edge-emel",  "label": "Edge – Emel Neural (Türkçe Kadın)"})
-    except Exception:
-        pass
+    except Exception as e:
+        # Log the error for debugging purposes but don't let it propagate
+        # as edge-tts might not be installed or available
+        print(f"[App Config] Error checking edge-tts voices: {e}")
 
     # ── spd-say fallback (her zaman dahil et) ────────────────────────────────
     voices.append({"id": "spd-say", "label": "spd-say (Sistem Sesi)"})
