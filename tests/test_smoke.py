@@ -107,6 +107,8 @@ from tests.test_skill_system_health import *
 from tests.test_skill_voice_coding import *
 from tests.test_hardware_detector import *
 from tests.test_aca_agent import *
+from tests.test_theme import *
+from tests.test_camera_capture import *
 
 # =============================================================================
 
