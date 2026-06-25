@@ -174,8 +174,8 @@ new_content = content[:start_idx] + """    # ── STT Listen Loop ────
                 if stream:
                     stream.close()
                 p.terminate()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[Ollama STT] Cleanup error: {e}")
 """
 
 with open("core/ollama_provider.py", "w", encoding="utf-8") as f:

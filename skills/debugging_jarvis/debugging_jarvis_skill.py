@@ -51,8 +51,22 @@ def _run_cmd(cmd: str, timeout: float = 5.0) -> str:
         return f"⚠️ Hata: {e}"
 
 
+# Allowlist of safe modules for exec-based import check
+_SAFE_MODULES = {
+    "sounddevice", "pyaudio", "pyttsx3", "tkinter", "faster_whisper",
+    "speech_recognition", "numpy", "scipy", "httpx", "psutil",
+    "audio.noise_suppressor",
+}
+
+
 def _check_python_import(module_name: str, import_expr: str = "") -> str:
     """Bir Python modülünün import edilip edilemediğini kontrol et."""
+    if not module_name or not isinstance(module_name, str):
+        return "❌ Geçersiz modül adı."
+
+    if import_expr and module_name not in _SAFE_MODULES:
+        return f"❌ Güvenlik: '{module_name}' için exec() kullanımına izin verilmiyor."
+
     try:
         if import_expr:
             exec(f"import {module_name}; {import_expr}", {"__builtins__": __builtins__})
