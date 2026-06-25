@@ -63,8 +63,10 @@ def load_app_config() -> dict:
         raw = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
         if isinstance(raw, dict):
             config.update(raw)
-    except Exception:
-        pass
+    except Exception as e:
+        # Log the error for debugging purposes but don't let it propagate
+        # as corrupted config should fall back to default values
+        print(f"[App Config] Error loading config file: {e}")
     return config
 
 
