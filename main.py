@@ -1094,7 +1094,7 @@ def main():
             print("[JARVIS] ⚠️  No microphone detected — voice input disabled.")
         if hw.display.status != "ok":
             print(f"[JARVIS] ⚠️  No display — {hw.display.detail}")
-            print("[JARVIS] Tip: Run with --headless or use web_ui.py")
+            print("[JARVIS] Tip: Run with --headless (web_ui.py archived to scripts/archive/)")
     except ImportError:
         print("[JARVIS] HardwareDetector not available, skipping.")
 

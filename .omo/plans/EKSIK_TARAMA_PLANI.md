@@ -75,8 +75,8 @@
 
 | ID | Dosya | Sorun | İşlem | Tahmini Süre |
 |----|-------|-------|-------|-------------|
-| **D1** | `replace_stt.py` (184 satır) | **Bir kerelik migration script'i, artık kullanılmıyor** | `scripts/archive/`'a taşındı ✅ | 2 dk |
-| **D2** | `web_ui.py` (105 satır) | **`pywebview` dependency'si yorum satırında, çalışmaz durumda** | Sil veya dependency'i aktifleştir + uyarı ekle | 5 dk |
+| **D1** | `replace_stt.py` (184 satır) | **Bir kerelik migration script'i** | `scripts/archive/`'a taşındı ✅ | 2 dk |
+| **D2** | `web_ui.py` (107 satır) | **`pywebview` yorum satırında, çalışmaz** | `scripts/archive/`'a taşındı ✅ | 5 dk |
 | **D3** | `helpers/bin/README.md` | **Boş `bin/` dizini, klasörün tek içeriği README** | Sil veya binary'leri ekle | 2 dk |
 | **D4** | `captures/` | **Boş dizin, hiçbir şey içermiyor** | Sil (git'te yoksa) | 1 dk |
 | **D5** | `assets/thinking_phrases.json` | **Tek dosya, kullanılıyor mu kontrol et** | Doğrula, kullanılmıyorsa arşivle | 3 dk |
@@ -116,6 +116,7 @@ Dalga 1-4 işlenirken tespit edilen ek sorunlar:
 | Test | 1119 → 2512 (81 dosya, tüm skill testleri) | ✅ |
 | **Q1-Q7** — DALGA 1 | 78 fonksiyona dönüş tipi imzası eklendi | 2026-06-25 ✅ |
 | **D1** — DALGA 3 | `replace_stt.py` → `scripts/archive/` taşındı | 2026-06-25 ✅ |
+| **D2** — DALGA 3 | `web_ui.py` → `scripts/archive/` taşındı (yarım pywebview prototip) | 2026-06-25 ✅ |
 | **D6** — DALGA 3 | `setup_report_*.txt` silindi | 2026-06-25 ✅ |
 | **M1-M3** — DALGA 4 | Test sayısı 5 dokümanda güncellendi (README, CLAUDE, ARCHITECTURE, graphify-out, fsc plan) | 2026-06-25 ✅ |
 | **E1** — Git Cleanup | `memory/*.db` `.gitignore` + untrack | 2026-06-25 ✅ |
@@ -128,10 +129,10 @@ Dalga 1-4 işlenirken tespit edilen ek sorunlar:
 |-------|-----|------|
 | 1 — Kod Kalitesi | 78 fonksiyona tip imzası | ✅ Tamam |
 | 2 — Test Kapsamı | 10 yeni test dosyası | ~105 dk |
-| 3 — Ölü Kod | D1,D6 tamam; D2-D5 kaldı (7 dk) | ~7 dk |
+| 3 — Ölü Kod | D1,D2,D6 tamam; D3-D5 kaldı (6 dk) | ~6 dk |
 | 4 — Dokümantasyon | 5 dokümanda test sayısı | ✅ Tamam |
 | 5 — Git Temizlik & Test | E1-E3 | ✅ Tamam |
-| **Toplam** | **Kalan: D2-D5 + DALGA 2** | **~112 dk (~2 saat)** |
+| **Toplam** | **Kalan: D3-D5 + DALGA 2** | **~111 dk (~2 saat)** |
 
 ---
 
