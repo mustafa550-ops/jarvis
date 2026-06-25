@@ -378,15 +378,15 @@ jarvis/
 
 ### API Anahtarları / API Keys (`config/api_keys.json`)
 
-| 🇹🇷 Anahtar | 🇹🇷 Zorunlu | 🇬🇧 Required | 🇩🇪 Erforderlich | 🇹🇷 Açıklama |
-|-------------|-------------|--------------|-------------------|-------------|
-| `gemini_api_key` | ✅ Evet | ✅ Yes | ✅ Ja | Gemini AI anahtarı (birincil backend) |
-| `voice` | — Hayır | — No | — Nein | Gemini ses modeli (varsayılan: `Charon`) |
-| `backend_type` | — Hayır | — No | — Nein | `gemini` veya `ollama` (varsayılan: `gemini`) |
-| `ollama_model` | — Hayır | — No | — Nein | Ollama model adı (örn: `qwen2.5:1.5b`) |
-| `ollama_tts_voice` | — Hayır | — No | — Nein | Yerel TTS sesi (varsayılan: `piper-fahrettin`) |
-| `youtube_api_key` | — Hayır | — No | — Nein | YouTube Data API anahtarı |
-| `youtube_channel_handle` | — Hayır | — No | — Nein | YouTube kanal handle'ı |
+| 🇹🇷 Anahtar | Durum | 🇹🇷 Açıklama |
+|-------------|-------|-------------|
+| `gemini_api_key` | ✅ Zorunlu | Gemini AI anahtarı — birincil backend için şart |
+| `backend_type` | ✅ Zorunlu | `gemini` veya `ollama` — hangi modda çalışacağını belirler |
+| `voice` | ⭐ Önerilen | Gemini ses modeli (varsayılan: `Charon`) |
+| `ollama_model` | ⭐ Önerilen | Ollama model adı (örn: `qwen2.5:1.5b`) |
+| `ollama_tts_voice` | ⭐ Önerilen | Yerel TTS sesi (varsayılan: `piper-fahrettin`) |
+| `youtube_api_key` | — Opsiyonel | YouTube Data API anahtarı |
+| `youtube_channel_handle` | — Opsiyonel | YouTube kanal handle'ı |
 
 ### UI Ayarları / UI Settings / UI-Einstellungen
 
