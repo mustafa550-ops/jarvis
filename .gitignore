@@ -39,6 +39,9 @@ audio/lib/*.so*
 # Python venv
 .venv/
 
+# Setup reports
+setup_report_*.txt
+
 # OpenCode session artifacts
 .omo/run-continuation/
 

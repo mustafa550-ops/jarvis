@@ -6,6 +6,25 @@
 
 ---
 
+## ✅ FSC WAVE 1 — Bare Except & Bug Fix (2026-06-25)
+
+**Kapsam:** FSC plan.md items 1-17 — 7 dosyada 60 satır değişiklik.
+
+| # | Değişiklik | Kanıt |
+|---|-----------|-------|
+| WF1 | `web_ui.py` destroy() bare except → log | `print(f"[WebUI] Error during destroy: {e}")` |
+| WF2 | `replace_stt.py` cleanup bare except → log | `print(f"[Ollama STT] Cleanup error: {e}")` |
+| WF3 | `app_config.py` 3 bare except → log | `print(f"[App Config] Error ... : {e}")` |
+| WF4 | `ollama_provider.py` 7 bare except → specific exception + log | Her caught exception loglanıyor |
+| WF5 | `orchestrator.py` _distribute() 9 bare except → `logger.debug()` | `logger.debug("[AudioPipeline] ... error: %s", e)` |
+| WF6 | `debugging_jarvis_skill.py` exec() → `_SAFE_MODULES` allowlist | Modül adı validation |
+| WF7 | `voice_manager.py` bare except → log | `print(f"[VoiceManager] Config load error: {e}")` |
+| WF8 | `ollama_provider.py` _stt_listen_loop → `finally` cleanup log | Resource leak koruması |
+
+**Test:** 1142 passed (1 pre-existing failure, 2 skipped)
+
+---
+
 ## ✅ ÖNCEDEN DÜZELTİLENLER (doğrula, dokunma)
 
 | # | Sorun | Durum | Kanıt |
@@ -69,7 +88,7 @@
 
 | ID | Dosya | Sorun | İşlem | Tahmini Süre |
 |----|-------|-------|-------|-------------|
-| **M1** | `README.md` | "1976 test" yazıyor, gerçek: 1119 | Test sayısını güncelle | 2 dk |
+| **M1** | `README.md` | "1976 test" yazıyor, gerçek: 1142 | Test sayısını güncelle | 2 dk |
 | **M2** | `CLAUDE.md` | Eski docs/ yapısını referans alıyor | docs/ satır sayılarını güncelle | 5 dk |
 | **M3** | `.gitignore` | `setup_report_*.txt` ve geçici test dosyaları gitignore'da yok | Ekle | 1 dk |
 
@@ -77,7 +96,14 @@
 
 ---
 
-## ⏱ TOPLAM SÜRE TAHMİNİ
+## ✅ TAMAMLANANLAR
+
+| Dalga | İş | Tarih |
+|-------|-----|-------|
+| **FSC Wave 1** — Bug Fix | 7 dosyada bare except fix + exec allowlist + resource leak | 2026-06-25 ✅ |
+| Test | 1119 → 1142 (23 yeni test) | ✅ |
+
+## ⏱ KALAN SÜRE TAHMİNİ
 
 | Dalga | İş | Süre |
 |-------|-----|------|
