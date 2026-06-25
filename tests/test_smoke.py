@@ -110,6 +110,15 @@ from tests.test_aca_agent import *
 from tests.test_theme import *
 from tests.test_camera_capture import *
 from tests.test_setup_dialog import *
+from tests.test_skill_browser import *
+from tests.test_skill_weather import *
+from tests.test_skill_media import *
+from tests.test_skill_network import *
+from tests.test_skill_reminders import *
+from tests.test_skill_calendar import *
+from tests.test_skill_vision import *
+from tests.test_skill_whatsapp import *
+from tests.test_skill_youtube import *
 
 # =============================================================================
 
