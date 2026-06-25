@@ -378,15 +378,15 @@ jarvis/
 
 ### API Anahtarları / API Keys (`config/api_keys.json`)
 
-| 🇹🇷 Anahtar | Zorunlu | 🇹🇷 Açıklama | 🇬🇧 Description | 🇩🇪 Beschreibung |
-|-------------|---------|-------------|-----------------|------------------|
-| `gemini_api_key` | ✅ | Gemini AI API anahtarı (birincil backend) | Gemini API key (primary backend) | Gemini-API-Schlüssel (primäres Backend) |
-| `voice` | ❌ | Gemini ses modeli (varsayılan: `Charon`) | Gemini voice model (default: `Charon`) | Gemini-Stimmenmodell (Standard: `Charon`) |
-| `backend_type` | ❌ | `gemini` veya `ollama` (varsayılan: `gemini`) | Backend selection | Backend-Auswahl |
-| `ollama_model` | ❌ | Ollama model adı (örn: `qwen2.5:1.5b`) | Ollama model name | Ollama-Modellname |
-| `ollama_tts_voice` | ❌ | Yerel TTS sesi (varsayılan: `piper-fahrettin`) | Local TTS voice | Lokale TTS-Stimme |
-| `youtube_api_key` | ❌ | YouTube Data API anahtarı | YouTube Data API key | YouTube-Data-API-Schlüssel |
-| `youtube_channel_handle` | ❌ | YouTube kanal handle'ı | YouTube channel handle | YouTube-Kanal-Handle |
+| 🇹🇷 Anahtar | 🇹🇷 Zorunlu | 🇬🇧 Required | 🇩🇪 Erforderlich | 🇹🇷 Açıklama |
+|-------------|-------------|--------------|-------------------|-------------|
+| `gemini_api_key` | ✅ Evet | ✅ Yes | ✅ Ja | Gemini AI anahtarı (birincil backend) |
+| `voice` | — Hayır | — No | — Nein | Gemini ses modeli (varsayılan: `Charon`) |
+| `backend_type` | — Hayır | — No | — Nein | `gemini` veya `ollama` (varsayılan: `gemini`) |
+| `ollama_model` | — Hayır | — No | — Nein | Ollama model adı (örn: `qwen2.5:1.5b`) |
+| `ollama_tts_voice` | — Hayır | — No | — Nein | Yerel TTS sesi (varsayılan: `piper-fahrettin`) |
+| `youtube_api_key` | — Hayır | — No | — Nein | YouTube Data API anahtarı |
+| `youtube_channel_handle` | — Hayır | — No | — Nein | YouTube kanal handle'ı |
 
 ### UI Ayarları / UI Settings / UI-Einstellungen
 
