@@ -103,8 +103,8 @@ def parse_local_tool_call(text: str) -> tuple | None:
                 if isinstance(v, str) and len(v) > MAX_ARG_LENGTH:
                     return None
             return tool_name, parsed
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Ollama Tool Call] JSON parse error (trying fallback): {e}")
 
     # Fallback: key=value pairs
     try:
@@ -116,8 +116,8 @@ def parse_local_tool_call(text: str) -> tuple | None:
                 return None
             args[key] = val
         return tool_name, args
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Ollama Tool Call] Fallback parse error: {e}")
 
     return None
 
@@ -308,8 +308,8 @@ class OllamaProvider(BaseProvider):
         if pv is not None:
             try:
                 pv.start()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[Ollama] Proactive voice start error: {e}")
 
         if getattr(j.ui, "_jarvis_state", "") not in ("THINKING", "SPEAKING"):
             j.set_state("LISTENING")
@@ -334,8 +334,8 @@ class OllamaProvider(BaseProvider):
             if vm is not None:
                 try:
                     vm.log_user(text)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Ollama] Voice memory error: {e}")
 
             j.set_state("THINKING")
 
@@ -344,8 +344,8 @@ class OllamaProvider(BaseProvider):
             if ta is not None:
                 try:
                     ta.start("processing")
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Ollama] Thinking aloud error: {e}")
 
             # ── Build system prompt ──
             mem_data = _load_memory()
@@ -359,8 +359,8 @@ class OllamaProvider(BaseProvider):
             if tr is not None:
                 try:
                     transcript_str = tr.get_formatted(n=5)
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(f"[Ollama] Transcript error: {e}")
 
             parts = [time_ctx]
             if mem_str:
@@ -601,7 +601,8 @@ class OllamaProvider(BaseProvider):
                                 done_reason = data.get("done_reason", "")
                                 if done_reason and done_reason not in ("stop", ""):
                                     j.ui.safe_call(j.ui.write_debug, f"Ollama done_reason: {done_reason}", level="WARN")
-                        except Exception:
+                        except json.JSONDecodeError:
+                            # Partial/incomplete NDJSON chunk — expected during streaming
                             pass
         return response_text
 
@@ -723,3 +724,5 @@ class OllamaProvider(BaseProvider):
 
         except Exception:
             traceback.print_exc()
+        finally:
+            print("[Ollama STT] Listen loop ended.")

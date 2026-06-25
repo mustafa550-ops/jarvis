@@ -37,7 +37,8 @@ def _load_voices_config(config_path: Optional[Path] = None) -> dict:
             for k, v in loaded.items():
                 if v is not None:
                     defaults[k] = v
-    except Exception:
+    except Exception as e:
+        print(f"[VoiceManager] Config load error: {e}")
         traceback.print_exc()
     return defaults
 

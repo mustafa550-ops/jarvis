@@ -384,16 +384,16 @@ class UnifiedAudioPipeline:
         if ww is not None:
             try:
                 ww.feed_audio(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[AudioPipeline] Wake word feed error: %s", e)
 
         # 2. Always feed audio buffer (16kHz)
         buf = getattr(j, "audio_buffer", None)
         if buf is not None:
             try:
                 buf.write(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[AudioPipeline] Buffer write error: %s", e)
 
         # 3. Check if JARVIS is speaking → barge-in detection
         barge = getattr(j, "barge_in", None)
@@ -401,45 +401,45 @@ class UnifiedAudioPipeline:
         try:
             with j._speaking_lock:
                 jarvis_speaking = j._is_speaking
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[AudioPipeline] Speaking lock error: %s", e)
 
         if jarvis_speaking and barge is not None:
             try:
                 barge.process_user_audio(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[AudioPipeline] Barge-in error: %s", e)
             return  # Don't process as user speech while JARVIS is speaking
 
         # 4. Check muted
         try:
             if j.ui.muted:
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[AudioPipeline] Muted check error: %s", e)
 
         # 5. Check paused
         try:
             if j._paused:
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("[AudioPipeline] Paused check error: %s", e)
 
         # 6. Feed streaming STT (16kHz)
         sstt = getattr(j, "streaming_stt_engine", None)
         if sstt is not None:
             try:
                 sstt.feed_audio(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[AudioPipeline] STT feed error: %s", e)
 
         # 7. Feed the active provider's audio pipeline (16kHz)
         provider = getattr(j, "_provider", None)
         if provider is not None and hasattr(provider, "feed_audio"):
             try:
                 provider.feed_audio(data)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("[AudioPipeline] Provider feed error: %s", e)
 
     def get_gemini_queue_size(self) -> int:
         """Gemini kuyrugundaki bekleyen ses parcacigi sayisi."""
