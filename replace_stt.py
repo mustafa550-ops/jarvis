@@ -174,8 +174,10 @@ new_content = content[:start_idx] + """    # ── STT Listen Loop ────
                 if stream:
                     stream.close()
                 p.terminate()
-            except Exception:
-                pass
+            except Exception as e:
+                # Log the error for debugging purposes but don't let it propagate
+                # as this is called during cleanup
+                print(f"[Replace STT] Error during cleanup: {e}")
 """
 
 with open("core/ollama_provider.py", "w", encoding="utf-8") as f:
