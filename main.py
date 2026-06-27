@@ -1272,12 +1272,10 @@ def main():
         if not hw_mgr.is_display_ready():
             state = hw_mgr.get_state()
             print(f"[JARVIS] ⚠️  No display — {state.detection.display.detail}")
-            if not headless:
-                print("[JARVIS] Tip: Run with --headless (CLI mode)")
-                print("[JARVIS] Kapatiliyor...")
-                return
+            print("[JARVIS] Display olmadigi icin headless CLI moduna geçiliyor...")
+            headless = True
         if headless:
-            print("[JARVIS] --headless mode active: display check skipped, CLI only.")
+            print("[JARVIS] Headless CLI mode active.")
         # Start background health monitoring
         hw_mgr.start_monitoring(interval_s=60.0)
     except ImportError as e:
