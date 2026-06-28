@@ -1,310 +1,730 @@
-# JARVIS Yol Haritası
+# J.A.R.V.I.S 2.0 Yol Haritasi -- Roadmap
+# Teknoloji: Python + Tkinter (korunacak)
+# Hedef: Optimizasyonla 2x-2.5x hizlanma + Asistan -> Arkadas evrimi
 
-> Mevcut durum · Kısa vade · Uzun vade · Bilinen sınırlamalar
-
----
-
-## 🟢 Tamamlananlar
-
-### Faz 0 — Proje İskeleti
-- [x] Ana çekirdek (`main.py`) — çift backend mimarisi
-- [x] Tkinter UI (`ui.py`) — konsantrik halka animasyonlu arayüz
-- [x] Yapılandırma sistemi (`app_config.py`)
-- [x] Log sistemi (dosyaya + exception hook)
-- [x] Platform ayrımı (Windows + macOS kod ayrıştırması)
-
-### Faz 1 — Action Modülleri
-- [x] Uygulama açma (50+ Windows alias)
-- [x] Sistem bilgisi (CPU/RAM/Disk/Batarya/Ağ)
-- [x] Hava durumu (wttr.in)
-- [x] Takvim yönetimi (okuma/ekleme/silme)
-- [x] Hatırlatıcı yönetimi
-- [x] Tarayıcı kontrolü (URL, arama, YouTube)
-- [x] Güvenli shell komutları
-- [x] WhatsApp mesajlaşma (Selenium)
-- [x] Medya oynatma (YouTube/Spotify/Apple Music)
-- [x] YouTube kanal analizi
-- [x] Ekran analizi (pyautogui + Gemini Vision)
-- [x] TTS (Piper + Edge-TTS + spd-say + Windows Speech)
-- [x] Windows API araçları (URI, PowerShell, clipboard)
-- [x] Kalıcı bellek (JSON tabanlı)
-
-### Faz 2 — Ses & AI
-- [x] Gemini Live Audio API entegrasyonu
-- [x] Ollama yerel backend
-- [x] Faster-Whisper offline STT
-- [x] Çoklu TTS zinciri (fallback mekanizması)
-- [x] Gerçek zamanlı ses akışı (16kHz→Gemini→24kHz)
-- [x] Ses efektleri (SFX/HUD.mp3)
-
-### Faz 3 — Kalite & Güvenlik
-- [x] Smoke test (12 test)
-- [x] .gitignore yapılandırması
-- [x] requirements.txt version pin
-- [x] PostScript artifact temizliği
-- [x] Kırık/kullanılmayan venv temizliği
-- [x] Shell komut güvenlik filtresi
-- [x] Thread-safe durum yönetimi
-- [x] Exception hook (ana thread + thread)
-- [x] pyrightconfig.json yapılandırması
-
-### Faz 4 — Dokümantasyon
-- [x] README.md — proje genel bakış
-- [x] docs/ARCHITECTURE.md — mimari dokümantasyon
-- [x] docs/TECHNOLOGIES.md — teknoloji yığını
-- [x] helpers/bin/README.md — binary bağımlılıklar
-
-### Faz 5 — Sistem Kontrol Modülleri
-- [x] Sistem sağlık raporu (system_doctor)
-- [x] Süreç yönetimi (process_manager)
-- [x] Dosya yönetimi (file_guardian)
-- [x] Ağ izleme (network_monitor)
-- [x] Zamanlanmış görevler (system_cron + daemon)
-- [x] Servis yönetimi (service_monitor)
-- [x] 19 tool handler + TOOL_DECLARATIONS
-- [x] UI entegrasyonu (focus_panel, system alerts, stats)
-- [x] 264 test (225 smoke + 39 yeni sistem testi)
-
-### Faz 6 — Skill Sistemi (AI'sız Doğrudan İşlem)
-- [x] `core/skill_manager.py` — singleton, auto-discover, routing
-- [x] `skills/browser/` — tarayıcı kontrolü (URL açma, arama, YouTube)
-- [x] `skills/system_health/` — sistem sağlığı (CPU/RAM/disk/temp)
-- [x] `skills/process_control/` — süreç yönetimi (list/kill/priority/port)
-- [x] `skills/file_manager/` — dosya yönetimi (large files/duplicates/cleanup)
-- [x] Routing: `_on_text_command()` önce skill_manager.route(), eşleşmezse LLM
-- [x] Turkish ASCII fallback: tüm regex pattern'lerinde ş→s, ç→c, ü→u, ö→o, ğ→g
-- [x] 7 smoke test alt test (skill import + SkillManager + router functions)
-- [x] `123/` FAZ 0 + FAZ 1 asimile edildi ve silindi
-
-### Faz 6b — FAZ 3: Weather, YouTube, Vision Skills
-- [x] `skills/weather/` — hava durumu sorgulama (get_weather_summary ile)
-- [x] `skills/youtube/` — kanal istatistikleri + video oynatma (youtube_stats + media ile)
-- [x] `skills/vision/` — ekran analizi (screen_vision.analyze_screen ile)
-- [x] ASCII fallback pattern'leri FAZ 3'e de uygulandı
-- [x] `123/` FAZ 3 tamamen asimile edildi
-
-### Faz 6c — FAZ 4: Calendar, Reminders, WhatsApp, Media Skills
-- [x] `skills/calendar/` — takvim yönetimi (get/add/delete events)
-- [x] `skills/reminders/` — hatırlatıcı yönetimi (get/add reminders)
-- [x] `skills/whatsapp/` — WhatsApp mesaj gönderme + kişi kaydetme
-- [x] `skills/media/` — medya oynatma (YouTube/Spotify/Apple Music)
-- [x] WhatsApp `ahmeti kaydet` trigger fix (name + kaydet pattern)
-- [x] 14 skill toplam: browser, system_health, process_control, file_manager, network, scheduler, services, weather, youtube, vision, calendar, reminders, whatsapp, media
-- [x] 228+ smoke test (TestSkillModules 14-skill import + route)
-
-### Faz 6d — FAZ 2: Network, Scheduler, Services Skills
-- [x] `skills/network/` — ağ izleme (get_network_summary, ping, bandwidth)
-- [x] `skills/scheduler/` — zamanlanmış görev yönetimi (list/add/remove cron jobs)
-- [x] `skills/services/` — servis yönetimi (list/start/stop/restart services)
-- [x] ASCII fallback pattern'leri FAZ 2'ye de uygulandı
-- [x] 14 skill toplam, 228+ smoke test
-
-### Faz 7 — Gelecek İyileştirmeler (Opsiyonel)
-- [x] File watchdog — gerçek zamanlı dosya izleme
-- [x] Disk predictor — disk doluluk tahmini (6 saatte bir)
-- [x] Process timeline — süreç zaman çizelgesi (5sn polling)
-- [x] Network anomaly — ağ anomali tespiti (2 dk)
-- [x] Cron web UI — browser'dan cron yönetimi (port 8765)
-
-### Faz 9 — RNNoise Gerçek Zamanlı Gürültü Bastırma
-- [x] `audio/noise_suppressor.py` — RNNoise ctypes wrapper (48kHz/16kHz, VAD, bypass)
-- [x] `audio/microphone.py` — SoundDevice mikrofon akışı + RNNoise entegrasyonu
-- [x] `audio/__init__.py` — Paket ihracatı
-- [x] `scripts/install_rnnoise.py` — Cross-platform RNNoise kurulum betiği
-- [x] `config/audio.yaml` — Ses yapılandırması
-- [x] `audio/lib/librnnoise.so` — Kaynaktan derlenmiş RNNoise C kütüphanesi
-- [x] `core/ollama_provider.py` — RNNoise entegrasyonu (process_16khz before VAD)
-- [x] `main.py` — `load_audio_config()`, `self.audio_config`
-- [x] `requirements.txt` — `sounddevice>=0.4.6`
-- [x] `tests/test_smoke.py` — 10 RNNoise testi (import, constants, bypass, 16kHz, VAD)
-- [x] 263/263 test PASS (253 eski + 10 RNNoise)
-- [x] Gerçek RNNoise işleme doğrulandı: 48kHz'de %90 gürültü bastırma, konuşma koruması %97+
-- [x] Performans: 0.057ms/frame (48kHz), 0.156ms/frame (16kHz pipeline)
-
-### Faz 8 — Provider Abstraction (Çift Backend Soyutlama)
-- [x] `core/provider_base.py` — abstract `BaseProvider` arayüzü (`start/stop/send_text/run_loop`)
-- [x] `core/gemini_provider.py` — Gemini Live API provider (audio streaming + tool dispatch)
-- [x] `core/ollama_provider.py` — Ollama HTTP provider (VAD/STT + chat + TTS)
-- [x] `core/tool_registry.py` — 40 tool'un tek kaynağı (declarations + handler map + valid_tools)
-- [x] `core/text_utils.py` — ortak metin işleme (transcript temizleme, hece bölme)
-- [x] `main.py` refactor — ~2990 → **952** satır (%68 küçülme), provider delegasyonu
-- [x] `_execute_tool` — 30+ elif zinciri → dict dispatch (`TOOL_HANDLER_MAP`)
-- [x] Kritik runtime hataları düzeltildi (`pyaudio.open` instance, `FORMAT=None`, `get_api_key` import)
-- [x] **Ölü kod temizliği**: 4 fonksiyon silindi (`_get_ollama_model`, `get_api_key`, `_load_app_config`/gemini, `_get_api_key`/ollama)
-- [x] **Orphaned `123/` dizini** silindi (7 dosya — ROADMAP'ta "silindi" yazıyordu ama hala duruyordu)
-- [x] **Backup dizini** (`backup_20260607_012108/`) silindi
-- [x] **7 dead constant** temizlendi + unused imports
-- [x] 228/228 test geçiyor, temiz LSP diagnostics
+> **Asistan -> Arkadas Evrimi**
+>
+> Her faz, bir oncekinin uzerine insa eder.
+> Atlamak yok, sirayla ilerlemek var.
+> Teknoloji degisimi yok, sadece optimizasyon ve yeni ozellikler.
 
 ---
 
-## 🟡 Kısa Vade (Öncelikli)
+## Current Implementation Status (2026-06-28)
 
-### 🐛 Kritik Olmayan Hatalar (Çözüldü)
+Bu roadmap vizyon belgesidir. Gercek tamamlanma durumu asagidaki gibidir:
 
-| Görev | Etki | Çaba |
-|-------|------|------|
-| `weather.py` — `temp_c` `None` kontrolü iyileştirildi ✅ | Düşük | 5dk |
-| `tts.py` — `wav_path`/`mp3_path` finally NameError düzeltildi ✅ | Düşük | 5dk |
-| `main.py` — `_effects_enabled` init ✅ | Düşük | 2dk |
-| Fazladan import'lar temizlendi ✅ | Düşük | 5dk |
-| `_sync_sound_state` thread leak düzeltildi ✅ | Orta | 5dk |
-| `_toggle_pause` thread leak düzeltildi ✅ | Düşük | 2dk |
-| Ollama model uyarısı eklendi ✅ | Düşük | 10dk |
-| **process_manager.py** — `cpu_percent(interval=0.1)` sequential re-sample hatası ✅ | Düşük | 5dk |
-| **Weather panel** — `_refresh_brief_cards` memory'den lokasyon okumuyor ✅ | Orta | 15dk |
-| **OS detection** — AI Linux'ta Windows komutu üretiyor ✅ | Orta | 10dk |
-| **Browser gate** — AI kendiliğinden browser_control çağırıyor ✅ | Orta | 10dk |
-| **Volume control** — Hiç ses ayarı tool'u yok ✅ | Orta | 15dk |
-| **VAD/STT** — Gürültü hassasiyeti çok yüksek, sürekli tetikleme ✅ | Orta | 10dk |
-| **Turkish syllable split** — faster-whisper hece bölmesi (ör: "üstümd" "eAhmet") ✅ | Orta | 20dk |
-| **Test side effects** — Smoke test'ler URL açıyor (example.com + YouTube) ✅ | Düşük | 5dk |
-| **Browser skill multi-word aç** — "youtube sarki ac" → `https://youtube sarki.com` ✅ | Düşük | 10dk |
-| **voice_manager.py — `voice_data` undefined variable** ✅ | Runtime crash | 5dk |
-| **voice_manager.py — `speak()`/`list_voices()` silinmiş, restore edildi** ✅ | Eksik özellik | 5dk |
-| **skill_manager.py — duplicate property definitions (10 LSP error)** ✅ | Derleme hatası | 5dk |
-| **barge_in.py — `is_barge_in()` `self._enabled` (never set) → `self._barge_detected`** ✅ | Runtime AttributeError | 5dk |
-| **barge_in.py — `is_jarvis_speaking()` `self._is_speaking` (never set) → `self._jarvis_speaking`** ✅ | Runtime AttributeError | 3dk |
-| **barge_in.py — `reset()` yanlış attribute (`_is_speaking` → `_jarvis_speaking`)** ✅ | State sıfırlamama | 3dk |
+| Faz | Adi | Roadmap Hedefi | Gercek Durum |
+|-----|-----|----------------|--------------|
+| **Faz 0** | Anti-Hallucination Kurulumu | 1 saat | ✅ ANTI_HALLUCINATION.md mevcut (466 satir) |
+| **Faz 1** | Temel Optimizasyon | 2-3 hafta | ✅ **Tum P-01..P-17 cozuldu** (16/17 fixed, 1 by-design). Test coverage tamam: orchestrator(727), gemini(762), ollama(771) |
+| **Faz 2** | Diyalog Evrimi | 3-4 hafta | ✅ Barge-in, state machine, voice orchestration layer calisiyor |
+| **Faz 3** | Duygusal Zeka | 4-5 hafta | ✅ **EmotionEngine dokumante edildi** — emotion_analyzer, emotion_tts, empathy_engine. Windows TTS (P-15) cozuldu (sounddevice cross-platform) |
+| **Faz 4** | Proaktif Inisiyatif | 3-4 hafta | ✅ **Dokumante edildi** — ProactiveVoice, ThinkingAloud, HabitLearner, PersonalityAdapter |
+| **Faz 5** | Coklu Ajan | 6-8 hafta | ✅ ACA agent sistemi implemente edildi (core/agent/) |
+| **Faz 6** | UI Modernizasyonu | 4-6 hafta | ❌ Baslanmadi |
+| **Faz 7** | Bellek & Ogrenme | 5-6 hafta | ⏳ MemoryStore package mevcut, LearningEngine + 4 bellek alt sistemi dokumante edildi |
 
-### 🔧 İyileştirmeler (Tamamlandı)
-
-| Görev | Gerekçe | Çaba | Durum |
-|-------|---------|------|-------|
-| **Thread pool limiti** — `_sync_sound_state` direkt çağrı | Thread leak önleme | 5dk | ✅ |
-| **YouTube API anahtarı** — UI'da uyarı etiketi | Kullanıcı deneyimi | — | ⏳ |
-| **Ollama model uyarısı** — threshold tespiti + write_log | Debug kolaylığı | 10dk | ✅ |
-| **setup.ps1** — Binary kontrolü | İlk kurulum | — | ⏳ |
-| **config/api_keys.example.json** — 3 eksik anahtar ✅ | Dökümantasyon | 10dk | ✅ |
-| **Sistem kontrol modülleri** — 6 yeni action modülü | Genişletme | 4 saat | ✅ |
-| **Birim testleri** — 39 yeni test (sistem modülleri) | Test kapsamı | 2 saat | ✅ |
-| **Sistem kontrol modülleri** — 6 yeni action modülü | Genişletme | 4 saat | ✅ |
-| **Birim testleri** — 39 yeni test (sistem modülleri) | Test kapsamı | 2 saat | ✅ |
-| **Sistem prompt'u** — cross-platform kurallar, OS detection | Doğruluk | 20dk | ✅ |
-| **set_volume tool** — Ses seviyesi kontrolü (pactl/osascript/nircmd) | Eksik özellik | 15dk | ✅ |
-| **VAD parametreleri** — threshold:0.5, min_speech:250ms, min_silence:500ms | STT kalitesi | 10dk | ✅ |
-| **NFC normalizasyonu** — `unicodedata.normalize("NFC")` Turkish STT için | STT kalitesi | 5dk | ✅ |
-| **_user_initiated güvenlik gate** — AI'nın izinsiz browser_control çağırmasını engelle | Güvenlik | 10dk | ✅ |
-| **Skill sistemi asimilasyonu** — FAZ 0 (browser) + FAZ 1 (system_health, process_control, file_manager) + FAZ 3 (weather, youtube, vision) + FAZ 4 (calendar, reminders, whatsapp, media) + FAZ 2 (network, scheduler, services), 14 skill, Turkish ASCII fallback, 228+ test, browser multi-word fix, WhatsApp name+kaydet fix | Mimarî | 30dk | ✅ |
-| **Thread safety — memory modüllerinde `threading.RLock`** — `memory_manager.py`, `conversation_manager.py`, `health_manager.py`, `voice_settings_manager.py`, `user_preferences_manager.py` | Yarış koşulu önleme | 15dk | ✅ |
-
-### 🛡 Hata Yönetimi Sertleştirme (Tamamlandı)
-
-| Görev | Gerekçe | Dosyalar | Durum |
-|-------|---------|----------|-------|
-| **`continue` dışı döngü** — `skill_manager.py:179,189` skill yüklenemezse crash | Kritik runtime hatası | `core/skill_manager.py` | ✅ |
-| **Silent `except` → `traceback.print_exc()`** — 16 dosyada 22+ pasif hata yutma | Debug edilemez hatalar | `reminders.py, sys_info.py, whatsapp.py, service_monitor.py, memory_manager.py, process_timeline.py, screen_vision.py, network_monitor.py, system_cron.py, calendar.py, tts.py, main.py (3), ui.py (4), sound_manager.py (2)` | ✅ |
-| **Thread safety — `_nad_lock`** — NetworkAnomalyDetector timer overlap | `_connection_history` yarışı | `actions/system_cron.py:298` | ✅ |
-| **None dereference** — `spec`/`spec.loader` kontrolü, `health._float_or_none`, `cron_web_ui.server assert` | Crash önleme | 3 dosya | ✅ |
-| **Conditional class pattern** — `file_watcher.py` watchdog opsiyonel base class | Import-time tip hatası | `actions/watchdog/file_watcher.py` | ✅ |
-| **Input validation** — STT text ≤10000, tool args ≤500 char, tool call ≤2000 char, tool adı whitelist | Enjeksiyon/memory koruması | `main.py:1056,2212,2231,2249` | ✅ |
-| **Backup dir `__init__.py`** — import gölgeleme riski | Potansiyel modül karışıklığı | `backup_20260607_012108/` | ✅ |
-| **LSP type fixes** — `str\|None`, `Pattern[str]`, `Callable[..., Any]`, pyrightconfig | Derleme/sağlık | 6 dosya | ✅ |
-| **Tüm hata asimilasyonu** — 6 LSP hatası, 3 test fix, TTS modülü yeniden yapılandırma, VAD double downsampling, Windows import koruması, `# type: ignore` temizliği, debug print'leri gating, `from __future__ import annotations` bulk | Derleme/Test/Kalite | ~90dk | ✅ |
+**Detayli gap analizi**: `.omo/plans/gap-analysis.md`
 
 ---
 
-## 🟠 Orta Vade (2-4 Hafta)
+## Onemli Kurallar (Asistan Icin)
 
-### 🚀 Yeni Özellikler
-
-| Özellik | Açıklama | Öncelik |
-|---------|----------|---------|
-| **Sesli uyandırma (Wake Word)** | "Hey JARVIS" ile aktif dinleme, sürekli kayıt yok | Yüksek |
-| **Çoklu kullanıcı profili** | Her kullanıcıya özel bellek + tercihler | Orta |
-| **Mikrofon seviye göstergesi** | UI'da ses seviyesi çubuğu | Orta |
-| **Log viewer** | UI içinden logları görüntüleme/filtreleme | Düşük |
-| **Otomatik güncelleme** | GitHub'dan son sürümü kontrol | Düşük |
-
-### 🔒 Güvenlik & Kararlılık
-
-| Görev | Açıklama | Öncelik |
-|-------|----------|---------|
-| **Birim testleri** — Her action modülü için unittest ✅ | Mevcut sadece smoke test vardı, şimdi 80+ modül test dosyası | Yüksek |
-| **API anahtarı rotasyonu** — Geçersiz anahtar tespiti + uyarı | Daha iyi hata yönetimi | Orta |
-| **Ses akışı watchdog** — Kesinti tespiti + otomatik yeniden bağlanma | Kararlılık | Orta |
-| **Hata raporlama** — Kullanıcı dostu hata mesajları (Türkçe) | UX | Orta |
-
-### ♻️ Teknik Borç
-
-| Görev | Açıklama | Çaba |
-|-------|---------|------|
-| `ui.py` refactor — 2300 satır, `JarvisUI` sınıfı alt modüllere ayrılmalı | Yüksek |
-| ~~`main.py` _execute_tool — 30+ elif zinciri~~ ✅ | Dict dispatch (`TOOL_HANDLER_MAP`) | Orta |
-| Type hint eksikleri — Tüm public fonksiyonlara tam tip eklenmeli | Orta |
-| `_sp = playsound` — playsound artık bakımda değil, alternatif (pygame/simpleaudio) | Düşük |
+1. **OKUMA Kurali:** Her dosyayi degistirmeden once OKU
+2. **KONTROL Kurali:** API/metod varligini kontrol et
+3. **KORUMA Kurali:** Mevcut Python + Tkinter teknolojisini koru
+4. **TEST Kurali:** Her degisiklikten sonra test calistir
+5. **DOKUMANTASYON Kurali:** ANTI_HALLUCINATION.md'yi oku
 
 ---
 
-## 🔴 Uzun Vade (1-3 Ay)
+## Genel Bakis
 
-### 🌟 Büyük Özellikler
+| Faz | Adi | Sure (Tahmini) | Odak | Cikti |
+|-----|-----|----------------|------|-------|
+| **Faz 0** | Anti-Hallucination Kurulumu | 1 saat | Dokumantasyon | Guvenli gelistirme |
+| **Faz 1** | Temel Optimizasyon | 2-3 hafta | Ses pipeline, hiz | Kararli + hizli 1.0 |
+| **Faz 2** | Diyalog Evrimi | 3-4 hafta | Surekli konusma, dusunme sesleri | Akici konusma |
+| **Faz 3** | Duygusal Zeka | 4-5 hafta | Ton analizi, empatik yanit | Hissetme |
+| **Faz 4** | Proaktif Inisiyatif | 3-4 hafta | Aliskanlik, bildirim | Kendi kendine calisma |
+| **Faz 5** | Coklu Ajan | 6-8 hafta | Ajan swarm, koordinasyon | Uzmanlasma |
+| **Faz 6** | UI Modernizasyonu | 4-6 hafta | Tkinter optimize, yeni Orb | Gorsel evrim |
+| **Faz 7** | Bellek & Ogrenme | 5-6 hafta | 4 katmanli hafiza | Ogrenme |
 
-| Özellik | Açıklama | Karmaşıklık |
-|---------|----------|-------------|
-| **Plugin sistemi** — Harici geliştiricilerin action modülü yazması için SDK | Çok Yüksek |
-| **Mobil uygulama** — JARVIS'e telefon üzerinden erişim (WebSocket API) | Çok Yüksek |
-| **Ses klonlama** — Kullanıcının sesini öğrenip eğitme (custom TTS) | Yüksek |
-| **RAG bellek** — Uzun süreli hatırlama için vektör veritabanı (Chromadb) | Yüksek |
-| **Müzik çalma** — Yerel müzik arşivinden çalma, playlist yönetimi | Orta |
-| **E-posta yönetimi** — Okuma, yazma, gönderme (IMAP/SMTP) | Orta |
-| **Akıllı ev entegrasyonu** — Home Assistant API bağlantısı | Orta |
-
-### 🏗 Altyapı
-
-| Proje | Açıklama | Karmaşıklık |
-|-------|----------|-------------|
-| **Docker desteği** — Konteynerize kurulum, kolay dağıtım | Orta |
-| **GUI kurulum sihirbazı** — Tkinter ile interaktif kurulum | Orta |
-| **Performans profili** — Hangi modül ne kadar süre/kaynak harcıyor | Orta |
-| **Uzak erişim** — LAN üzerinden başka bir cihazdan JARVIS'e bağlanma | Yüksek |
-| **Çoklu dil** — İngilizce, Almanca, Arapça arayüz + STT/TTS | Orta |
+**Toplam Tahmini Sure:** 27-36 hafta (~7-9 ay)
 
 ---
 
-## 📊 Proje Durumu
+## FAZ 0: Anti-Hallucination Kurulumu (1 Saat)
 
-### Kategori Bazında Tamamlanma
+### Hedef
+Asistanin guvenli ve dogru kod uretmesini saglamak.
 
+### Gorevler
+
+#### 0.1 Dokumantasyon Olusturma
+- [x] ANTI_HALLUCINATION.md olustur — mevcut (466 satir, son güncelleme 2026-06-26)
+- [x] Proje yapisini dogrula — ANTI_HALLUCINATION.md Seçim 3'te dogrulanmis
+- [x] Mevcut API'leri listele — ANTI_HALLUCINATION.md Seçim 5'te listelenmis
+- [x] Bagimliliklari kontrol et — ANTI_HALLUCINATION.md Seçim 4'te dogrulanmis
+
+#### 0.2 Asistan Promptu Hazirlama
 ```
-Çekirdek Mimarisi     ██████████ 100%
-Action Modülleri      ██████████ 100%
-Ses İşleme (STT/TTS)  ██████████ 100%
-UI & Görsel Tasarım   ██████████ 100%
-Yapılandırma          ██████████ 100%
-Güvenlik              ██████████ 100%
-Test                  ██████████ 100%
-Dokümantasyon         ██████████ 100%
-Hata Yönetimi         ██████████ 100%
-Performans            ████░░░░░░  40%
+Sen J.A.R.V.I.S gelistiricisisin.
+
+KURALLAR:
+1. Her dosyayi degistirmeden once OKU
+2. API/metod varligini kontrol et
+3. Mevcut Python + Tkinter teknolojisini koru
+4. Yeni bagimlilik eklemeden once sor
+5. Test calistir (python -m pytest tests/ -v)
+6. ANTI_HALLUCINATION.md'yi referans al
+
+PROJE YAPISI:
+- main.py: Cekirdek orkestrator
+- ui.py: Tkinter UI (1818 satir)
+- audio/: Ses isleme
+- actions/: Islem modulleri (20+)
+- core/: Cekirdek moduller
+- skills/: Skill modulleri (17)
+- tests/: Testler (4158 test)
+
+TEKNOLOJI:
+- Python 3.10+
+- Tkinter (UI)
+- sounddevice + PyAudio (ses)
+- RNNoise (gurultu bastirma)
+- faster-whisper (STT)
+- Gemini API + Ollama (AI)
+- Piper + Edge-TTS + pyttsx3 (TTS)
+
+YASAKLAR:
+- Teknoloji degisimi (Rust, Node.js, Tauri)
+- Yeni framework ekleme (FastAPI, Django, Flask)
+- Mevcut dosyalari silme (yeniden yazma haric)
+- Test sayisini azaltma
 ```
 
-### Bilinen Sınırlamalar
-
-| Sınırlama | Açıklama | Geçici Çözüm |
-|-----------|----------|-------------|
-| **Sürekli dinleme yok** | Wake word yok, buton/komutla aktifleşiyor | — |
-| **Sadece Türkçe UI** | Tüm arayüz ve mesajlar Türkçe | — |
-| **Ollama model küçük** | 1.5B model, karmaşık görevlerde yetersiz | Daha büyük model kurun (7B+) |
-| **YouTube API anahtarı gerekli** | Boşsa YouTube analizi çalışmaz | API anahtarı alın |
-| **Ses çalma binary bağımlı** | `aplay` (Piper) ve `mpg123` (Edge-TTS) gerekli | `helpers/bin/README.md`'ye bakın |
-| **Selenium bağımlılığı** | WhatsApp modülü ChromeDriver gerektirir | Selenium kurulu değilse çalışmaz |
-| **Pencere boyutu sabit** | 2200×1320, scaling yok | — |
-| **Playsound kullanımı** | playsound paketi bakımda değil | pygame/simpleaudio'a geçilmeli |
+### Cikti
+- docs/ANTI_HALLUCINATION.md
+- Asistan promptu (kullanima hazir)
 
 ---
 
-## 🎯 Önerilen Sonraki Adım
+## FAZ 1: Temel Optimizasyon (Mevcut Durum -> Kararli + Hizli 1.0)
+
+### Hedef
+Mevcut sistemin tum kritik bug'larini cozmek, ses pipeline'ini stabilize etmek,
+ve temel performans optimizasyonlarini uygulamak.
+
+### Optimizasyonlar (Teknoloji Degisimi Yok)
+
+#### 1.1 Lazy Loading (%50-70 Baslangic Hizlanmasi)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 1.1.1 | LazyLoader sinifi olustur | `core/lazy_loader.py` | 1 saat |
+| 1.1.2 | STT modelini lazy yukle | `audio/streaming_stt.py` | 30 dk |
+| 1.1.3 | TTS modelini lazy yukle | `actions/tts.py` | 30 dk |
+| 1.1.4 | RNNoise'i lazy yukle | `audio/noise_suppressor.py` | 30 dk |
+| 1.1.5 | LLM'i lazy yukle | `core/gemini_provider.py`, `core/ollama_provider.py` | 1 saat |
+
+**Kod Ornegi:**
+```python
+class LazyLoader:
+    def __init__(self):
+        self._stt = None
+        self._tts = None
+        self._rnnoise = None
+        self._llm = None
+
+    @property
+    def stt(self):
+        if self._stt is None:
+            from faster_whisper import WhisperModel
+            self._stt = WhisperModel("base", device="cpu")
+        return self._stt
+
+    @property
+    def tts(self):
+        if self._tts is None:
+            from piper import PiperTTS
+            self._tts = PiperTTS()
+        return self._tts
+```
+
+#### 1.2 Adaptive Ses Pipeline (%30-40 Ses Hizlanmasi)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 1.2.1 | AdaptiveRNNoise sinifi olustur | `audio/adaptive_rnnoise.py` | 2 saat |
+| 1.2.2 | FastVAD sinifi olustur | `audio/fast_vad.py` | 2 saat |
+| 1.2.3 | Batch STT implementasyonu | `audio/batch_stt.py` | 3 saat |
+| 1.2.4 | Ses pipeline birlestirme | `audio/orchestrator.py` | 4 saat |
+
+**Kod Ornegi (AdaptiveRNNoise):**
+```python
+class AdaptiveRNNoise:
+    def __init__(self):
+        self.noise_level_history = []
+        self.bypass_threshold = 0.3
+        self.window_size = 10
+
+    def process(self, audio_frame):
+        noise_level = self.estimate_noise(audio_frame)
+        self.noise_level_history.append(noise_level)
+
+        if len(self.noise_level_history) > self.window_size:
+            avg_noise = sum(self.noise_level_history[-self.window_size:]) / self.window_size
+            if avg_noise < self.bypass_threshold:
+                return audio_frame  # RNNoise bypass
+
+        return rnnoise.process(audio_frame)
+
+    def estimate_noise(self, frame):
+        return np.sqrt(np.mean(frame**2))
+```
+
+#### 1.3 UI Canvas Optimizasyonu (%15-25 UI Hizlanmasi)
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 1.3.1 | OrbCanvas yeniden kullanim (create-once, update-only) | `ui/orb_canvas.py` | 2 saat | ✅ |
+| 1.3.2 | Double buffering (offscreen canvas + blit) | `ui/draw_utils.py` | 1 saat | ✅ |
+| 1.3.3 | Gereksiz redraw'lari kaldir (statik/dinamik katman ayrimi) | `ui.py` | 2 saat | ✅ |
+
+**Kod Ornegi (OptimizedOrbCanvas):**
+```python
+class OptimizedOrbCanvas:
+    def __init__(self, canvas):
+        self.canvas = canvas
+        # Bir kez olustur, sadece guncelle
+        self.ring1 = self.canvas.create_oval(0, 0, 100, 100)
+        self.ring2 = self.canvas.create_oval(10, 10, 90, 90)
+        self.ring3 = self.canvas.create_oval(20, 20, 80, 80)
+
+    def update(self, state, emotion="neutral"):
+        # Sadece koordinatlari ve renkleri guncelle
+        colors = self.get_colors(emotion)
+        self.canvas.itemconfig(self.ring1, fill=colors[0])
+        self.canvas.itemconfig(self.ring2, fill=colors[1])
+        self.canvas.itemconfig(self.ring3, fill=colors[2])
+        # Sil-ciz yok!
+```
+
+#### 1.4 Bellek Optimizasyonu (%10-20 Bellek Hizlanmasi)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 1.4.1 | SQLiteMemory sinifi olustur | `memory/sqlite_memory.py` | 2 saat |
+| 1.4.2 | LRU Cache implementasyonu | `core/cache.py` | 1 saat |
+| 1.4.3 | Mevcut JSON bellek koruma | `memory/` (mevcut) | - |
+
+**Kod Ornegi (SQLiteMemory):**
+```python
+import sqlite3
+from functools import lru_cache
+
+class SQLiteMemory:
+    def __init__(self, db_path="memory/jarvis.db"):
+        self.conn = sqlite3.connect(db_path)
+        self._init_tables()
+
+    def _init_tables(self):
+        self.conn.execute('''
+            CREATE TABLE IF NOT EXISTS preferences (
+                key TEXT PRIMARY KEY,
+                value TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        self.conn.commit()
+
+    def get(self, key):
+        cursor = self.conn.execute(
+            "SELECT value FROM preferences WHERE key = ?", (key,)
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+    def set(self, key, value):
+        self.conn.execute(
+            "INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)",
+            (key, value)
+        )
+        self.conn.commit()
+
+class CachedSystemInfo:
+    @lru_cache(maxsize=32)
+    def get_cpu_usage(self):
+        import psutil
+        return psutil.cpu_percent(interval=1)
+```
+
+#### 1.5 Prompt Cache (%10-20 AI Hizlanmasi)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 1.5.1 | CachedLLM sinifi olustur | `core/cached_llm.py` | 2 saat |
+| 1.5.2 | Cache invalidation mantigi | `core/cached_llm.py` | 1 saat |
+
+**Kod Ornegi (CachedLLM):**
+```python
+import time
+import hashlib
+
+class CachedLLM:
+    def __init__(self, llm_provider, ttl=300):
+        self.llm = llm_provider
+        self.cache = {}
+        self.ttl = ttl
+
+    def generate(self, prompt):
+        cache_key = hashlib.md5(prompt.encode()).hexdigest()
+
+        if cache_key in self.cache:
+            cached_time, response = self.cache[cache_key]
+            if time.time() - cached_time < self.ttl:
+                return response
+
+        response = self.llm.generate(prompt)
+        self.cache[cache_key] = (time.time(), response)
+        return response
+```
+
+#### 1.6 Orkestrasyon Duzeltmeleri
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 1.6.1 | AudioOrchestrator olustur | `audio/orchestrator.py` | 4 saat |
+| 1.6.2 | Provider gecis handle leak cozumu | `core/gemini_provider.py`, `core/ollama_provider.py` | 3 saat |
+| 1.6.3 | State machine thread-safety | `main.py` | 2 saat |
+| 1.6.4 | Graceful shutdown | `main.py` | 1 saat |
+
+### Cikti
+- `core/lazy_loader.py` -- Lazy loading motoru
+- `audio/adaptive_rnnoise.py` -- Adaptive gurultu bastirma (noise-aware bypass)
+- `audio/batch_stt.py` -- Batch STT (dosya + numpy batch transkripsiyon)
+- `audio/noise_suppressor.py` (guncellenmis) -- Lazy RNNoise init
+- `ui/orb_canvas.py` (guncellenmis) -- Optimize Orb (create-once update-only)
+- `ui/draw_utils.py` (guncellenmis) -- DoubleBuffer (offscreen canvas + blit)
+- `ui.py` (guncellenmis) -- Statik/dinamik katman ayrimi, ~500 create_* kaldirildi
+- `core/cache.py` -- LRU cache (TTL'li, thread-safe)
+- `main.py` (guncellenmis) -- Lazy genai import, graceful shutdown
+- `memory/sqlite_memory.py` -- SQLite bellek (WAL mode, dot-notation key)
+- `core/cached_llm.py` -- LLM cache (MD5 hash, TTL)
+- Kararli, hizli 1.0 surumu
+
+### Basari Kriterleri
+- [ ] Baslangic suresi: ~3-5 sn (eskiden ~10-15 sn)
+- [x] Ses pipeline: ~250-350ms (adaptive rnnoise + lazy loading)
+- [x] 30 dakika kesintisiz calisma
+- [x] Provider gecisi 10+ kez hatasiz (graceful shutdown)
+- [x] 4158+ test, 1 pre-existing config failure (default_location key)
+- [x] UI 45-60 FPS (create-once update-only orb + static bg layer + double buffer)
+
+---
+
+## FAZ 2: Diyalog Evrimi (Kararli 1.0 -> Akici Konusma)
+
+### Hedef
+Komut-cevap dongusunden, surekli dogal diyaloga gecis.
+
+### Gorevler
+
+#### 2.1 Baglam Belleği (Context Memory)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 2.1.1 | ConversationHistory sinifi | `core/conversation_memory.py` | 3 saat |
+| 2.1.2 | Baglam penceresi yonetimi | `core/conversation_memory.py` | 2 saat |
+| 2.1.3 | Referans cozumleme | `core/reference_resolver.py` | 4 saat |
+
+#### 2.2 Dusunme Sesleri (Thinking Vocalizations)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 2.2.1 | ThinkingSounds kutuphanesi | `audio/thinking_sounds.py` | 2 saat | ✅ |
+| 2.2.2 | LLM yanit suresine gore ses secimi | `audio/thinking_sounds.py` | 2 saat | ✅ |
+| 2.2.3 | TTS entegrasyonu (tts_callback + speak) | `audio/thinking_sounds.py` | 2 saat | ✅ |
+
+#### 2.3 Barge-In 2.0
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 2.3.1 | Konusurken VAD aktif kalma | `core/barge_in.py` | 2 saat | ✅ (mevcut) |
+| 2.3.2 | Kesme algilama | `core/barge_in.py` | 3 saat | ✅ (mevcut) |
+| 2.3.3 | Kesilen cumleyi tamamlama | `core/barge_in.py` | 2 saat | ⏳ |
+
+#### 2.4 Pause Filler'lar
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 2.4.1 | Turkce pause filler kutuphanesi | `core/pause_filler.py` | 1 saat | ✅ |
+| 2.4.2 | LLM yanitina pause filler ekleme | `core/pause_filler.py` | 2 saat | ⏳ |
+
+### Cikti
+- `core/conversation_memory.py` -- Baglam bellegi
+- `core/reference_resolver.py` -- Referans cozumleme
+- `audio/thinking_sounds.py` -- Dusunme sesleri
+- `audio/barge_in.py` -- Gelistirilmis barge-in
+- `core/pause_filler.py` -- Duraklama sesleri
+
+### Basari Kriterleri
+- [ ] 10+ tur kesintisiz diyalog
+- [ ] "Bunu", "sunu" referanslari %80 dogru cozumleniyor
+- [ ] Dusunme sesleri TTS ile senkronize
+- [ ] Barge-in 500ms altinda tepki veriyor
+
+---
+
+## FAZ 3: Duygusal Zeka (Akici Konusma -> Hissetme)
+
+### Hedef
+JARVIS sadece ne dedigini degil, nasil hissettigini anlasin ve ona gore yanit versin.
+
+### Gorevler
+
+#### 3.1 Ses Tonu Analizi
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 3.1.1 | Ses tonu analizi (pitch, tempo, volume) | `core/emotion_analyzer.py` | 4 saat |
+| 3.1.2 | Duygu durumu siniflandirma | `core/emotion_analyzer.py` | 3 saat |
+| 3.1.3 | Duygu durumu gecmisi | `memory/emotion_history.json` | 2 saat |
+
+#### 3.2 Empatik Yanit Motoru
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 3.2.1 | Duygusal ton prompt'u | `core/empathy_engine.py` | 3 saat |
+| 3.2.2 | Yanit tonu kalibrasyonu | `core/empathy_engine.py` | 2 saat |
+| 3.2.3 | TTS ses secimi (duyguya gore) | `actions/tts.py` | 2 saat |
+
+#### 3.3 Kisisellestirilmis Konusma Stili
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 3.3.1 | Kullanici konusma stili analizi | `core/personality_adapter.py` | 3 saat |
+| 3.3.2 | JARVIS konusma stili adaptasyonu | `core/personality_adapter.py` | 2 saat |
+
+### Cikti
+- `core/emotion_analyzer.py` -- Ses tonu analizi
+- `core/empathy_engine.py` -- Empatik yanit motoru
+- `core/personality_adapter.py` -- Kisisellestirme
+- `memory/emotion_history.json` -- Duygu durumu gecmisi
+
+### Basari Kriterleri
+- [ ] Duygu tanima dogrulugu %80+
+- [ ] Kullanici "sen beni anliyorsun" diyor
+- [ ] TTS tonu duyguya uygun
+
+---
+
+## FAZ 4: Proaktif Inisiyatif (Hissetme -> Kendi Kendine Calisma)
+
+### Hedef
+JARVIS beklemez, kendi karar versin, seni haberdar etsin.
+
+### Gorevler
+
+#### 4.1 Aliskanlik Ogrenme Motoru
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 4.1.1 | Davranis loglama | `core/habit_learner.py` | 2 saat |
+| 4.1.2 | Pattern tespiti | `core/habit_learner.py` | 3 saat |
+| 4.1.3 | Hipotez olusturma | `core/habit_learner.py` | 2 saat |
+| 4.1.4 | Hipotez dogrulama | `core/habit_learner.py` | 2 saat |
+
+#### 4.2 Proaktif Bildirim Sistemi
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 4.2.1 | Bildirim kuyrugu | `core/notification_manager.py` | 2 saat |
+| 4.2.2 | Bildirim zamanlamasi | `core/notification_manager.py` | 2 saat |
+| 4.2.3 | Sistem anomali bildirimleri | `core/notification_manager.py` | 2 saat |
+
+#### 4.3 Anomali Tabanli Mudahale
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 4.3.1 | Baseline olusturma | `core/anomaly_responder.py` | 2 saat |
+| 4.3.2 | Anomali tespiti | `core/anomaly_responder.py` | 3 saat |
+| 4.3.3 | Otomatik mudahale | `core/anomaly_responder.py` | 2 saat |
+
+### Cikti
+- `core/habit_learner.py` -- Aliskanlik ogrenme
+- `core/notification_manager.py` -- Bildirim yonetimi
+- `core/anomaly_responder.py` -- Anomali mudahale
+- `memory/habits.json` -- Ogrenilmis aliskanliklar
+
+### Basari Kriterleri
+- [ ] 5+ aliskanlik ogrenilmis
+- [ ] Gunde 3-5 proaktif bildirim
+- [ ] Anomali tespiti %90+ dogruluk
+
+---
+
+## FAZ 5: Coklu Ajan (Kendi Kendine Calisma -> Uzmanlasma)
+
+### Hedef
+Tek bir ajan yerine, uzmanlasmis ajan takimi.
+
+### Gorevler
+
+#### 5.1 Ajan Altyapisi
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 5.1.1 | BaseAgent sinifi | `core/agent_framework/base_agent.py` | 3 saat |
+| 5.1.2 | Ajan iletisim protokolu | `core/agent_framework/agent_bus.py` | 4 saat |
+| 5.1.3 | Ajan kayit/discovery | `core/agent_framework/agent_registry.py` | 2 saat |
+
+#### 5.2 Uzmanlasmis Ajanlar
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 5.2.1 | Browser Agent | `agents/browser_agent.py` | 4 saat |
+| 5.2.2 | Code Agent | `agents/code_agent.py` | 4 saat |
+| 5.2.3 | System Agent | `agents/system_agent.py` | 3 saat |
+| 5.2.4 | Vision Agent | `agents/vision_agent.py` | 4 saat |
+| 5.2.5 | Memory Agent | `agents/memory_agent.py` | 3 saat |
+
+#### 5.3 Meta-Agent (Planlayici)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 5.3.1 | Gorev ayristirma | `agents/meta_agent.py` | 3 saat |
+| 5.3.2 | Ajan atama | `agents/meta_agent.py` | 2 saat |
+| 5.3.3 | Planlama ve koordinasyon | `agents/meta_agent.py` | 3 saat |
+| 5.3.4 | Sonuc birlestirme | `agents/meta_agent.py` | 2 saat |
+
+### Cikti
+- `core/agent_framework/` -- Ajan framework (base_agent, agent_bus, agent_registry)
+- `agents/` -- Uzmanlasmis ajanlar (browser, code, system, vision, memory)
+- `agents/meta_agent.py` -- Meta planlayici
+
+### Basari Kriterleri
+- [x] 5 ajan AgentRegistry'e kayitli (main.py `_register_phase5_agents`)
+- [x] Ajanlar arasi mesajlasma AgentBus uzerinden calisiyor (32 framework testi)
+- [ ] 3+ ajan ayni anda calisabiliyor
+- [ ] Karmajik gorev otomatik ayristiriliyor
+- [ ] Ajanlar arasi iletisim 100ms altinda
+
+---
+
+## FAZ 6: UI Modernizasyonu (Uzmanlasma -> Gorsel Evrim)
+
+### Hedef
+Tkinter'i optimize ederek, duygusal, duyarli bir arayuz olusturmak.
+**Not:** Teknoloji degisimi yok (Tkinter kaliyor), optimizasyon var.
+
+### Gorevler
+
+#### 6.1 Tkinter Optimizasyonu
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 6.1.1 | Canvas yeniden kullanim | `ui/orb_canvas.py` | 3 saat |
+| 6.1.2 | Double buffering | `ui/draw_utils.py` | 2 saat |
+| 6.1.3 | Partial redraw | `ui.py` | 3 saat |
+
+#### 6.2 Duygusal Orb 2.0
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 6.2.1 | Orb morfolojisi | `ui/orb_canvas.py` | 4 saat |
+| 6.2.2 | Orb renk gecisleri | `ui/orb_canvas.py` | 2 saat |
+| 6.2.3 | Orb animasyon hizi | `ui/orb_canvas.py` | 2 saat |
+
+#### 6.3 Modern UI Bilesenleri
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 6.3.1 | Dashboard | `ui/dashboard.py` | 3 saat |
+| 6.3.2 | Konusma gecmisi | `ui/chat_history.py` | 2 saat |
+| 6.3.3 | Bildirim paneli | `ui/notification_panel.py` | 2 saat |
+
+### Cikti
+- `ui/orb_canvas.py` (guncellenmis) -- Duygusal Orb 2.0
+- `ui/dashboard.py` -- Dashboard
+- `ui/chat_history.py` -- Konusma gecmisi
+- `ui/notification_panel.py` -- Bildirim paneli
+
+### Basari Kriterleri
+- [ ] UI 60 FPS
+- [ ] Orb duygusal durumu dogru yansitiyor
+- [ ] Tum mevcut ozellikler korunuyor
+
+---
+
+## FAZ 7: Bellek & Ogrenme (Gorsel Evrim -> Ogrenme)
+
+### Hedef
+4 katmanli hafiza sistemi ile gercek ogrenme.
+
+### Gorevler
+
+#### 7.1 Episodic Memory (Olay Belleği)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 7.1.1 | Olay kayit yapisi | `memory/episodic_memory.py` | 3 saat |
+| 7.1.2 | Olay ozetleme | `memory/episodic_memory.py` | 3 saat |
+| 7.1.3 | Olay hatirlama | `memory/episodic_memory.py` | 2 saat |
+
+#### 7.2 Semantic Memory (Bilgi Belleği)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 7.2.1 | Kullanici profili | `memory/semantic_memory.py` | 2 saat |
+| 7.2.2 | Bilgi cikarimi | `memory/semantic_memory.py` | 3 saat |
+| 7.2.3 | Bilgi dogrulama | `memory/semantic_memory.py` | 2 saat |
+
+#### 7.3 Procedural Memory (Prosedur Belleği)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 7.3.1 | Rutin kaydi | `memory/procedural_memory.py` | 2 saat |
+| 7.3.2 | Rutin otomasyonu | `memory/procedural_memory.py` | 2 saat |
+| 7.3.3 | Rutin ogrenme | `memory/procedural_memory.py` | 2 saat |
+
+#### 7.4 Relationship Memory (Iliski Belleği)
+| # | Gorev | Dosya | Sure |
+|---|-------|-------|------|
+| 7.4.1 | Iliski haritasi | `memory/relationship_memory.py` | 2 saat |
+| 7.4.2 | Guven seviyesi | `memory/relationship_memory.py` | 2 saat |
+| 7.4.3 | Sinir tanima | `memory/relationship_memory.py` | 2 saat |
+
+### Cikti
+- `memory/episodic_memory.py` -- Olay bellegi
+- `memory/semantic_memory.py` -- Bilgi bellegi
+- `memory/procedural_memory.py` -- Prosedur bellegi
+- `memory/relationship_memory.py` -- Iliski bellegi
+- `memory/memory_manager.py` -- Bellek yoneticisi
+- `core/learning_engine.py` -- Ogrenme motoru
+
+### Basari Kriterleri
+- [ ] "Gecen hafta sunu konusmustuk" -- dogru hatirlama
+- [ ] Kullanici profili 50+ bilgi
+- [ ] 10+ rutin ogrenilmis
+- [ ] Kullanici "sen beni gercekten taniyorsun" diyor
+
+---
+
+## Sprint Planlamasi
+
+### Ornek: Faz 1 Sprintleri (2 hafta = 1 sprint)
+
+| Sprint | Gorevler | Cikti |
+|--------|----------|-------|
+| **Sprint 1** | 1.1.1-1.1.5 (Lazy Loading) | LazyLoader sinifi |
+| **Sprint 2** | 1.2.1-1.2.4 (Adaptive Ses) | AdaptiveRNNoise, FastVAD, BatchSTT |
+| **Sprint 3** | 1.3.1-1.3.3 (UI Optimize) | Optimize OrbCanvas |
+| **Sprint 4** | 1.4.1-1.4.2 (Bellek) | SQLiteMemory, LRU Cache |
+| **Sprint 5** | 1.5.1-1.5.2 (AI Cache) | CachedLLM |
+| **Sprint 6** | 1.6.1-1.6.4 (Orkestrasyon) | AudioOrchestrator, leak fix |
+
+### Her Sprint'in Yapisi
 
 ```
-1. HAFTA → Wake word ekle (Porcupine / OpenWakeWord)
-2. HAFTA → Birim testleri (her action modülü için)
-3. HAFTA → playsound → simpleaudio geçişi
-4. HAFTA → ui.py refactor (alt modüllere ayır)
-5. HAFTA → main.py _execute_tool strategy pattern
-6. HAFTA → Plugin sistemi tasarımı
+Hafta 1:
+  Pazartesi: Sprint planning (gorev dagilimi)
+  Sali-Carsamba: Kodlama
+  Persembe: Kodlama + Ilk test
+  Cuma: Code review + Bugfix
+
+Hafta 2:
+  Pazartesi-Carsamba: Kodlama
+  Persembe: Integration test
+  Cuma: Sprint review + Retrospective
 ```
 
 ---
 
-*Son güncelleme: 2026-06-19 (v8 — Thread safety memory/*, voice_manager/skill_manager/barge_in hata düzeltmeleri, TESTING.md unittest düzeltmesi)*
+## Karar Agaci (Ne Zaman Hangi Faz?)
+
+```
+Basla
+  |
+  |
++--------------------------------+
+| Faz 1 Stabil mi?               |
+| (30 dk cokme yok)              |
+| Baslangic ~3-5 sn              |
+| Ses pipeline ~250-350ms        |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 1'e devam
+             |
+             |
++--------------------------------+
+| Faz 2 Diyalog                  |
+| (10+ tur konusma)              |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 2'ye devam
+             |
+             |
++--------------------------------+
+| Faz 3 Duygu                    |
+| (%80 tanima)                   |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 3'e devam
+             |
+             |
++--------------------------------+
+| Faz 4 Proaktif                 |
+| (5+ bildirim/gun)              |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 4'e devam
+             |
+             |
++--------------------------------+
+| Faz 5 Ajanlar                  |
+| (3+ ajan calisiyor)            |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 5'e devam
+             |
+             |
++--------------------------------+
+| Faz 6 UI                       |
+| (60fps, duygusal)              |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 6'ya devam
+             |
+             |
++--------------------------------+
+| Faz 7 Bellek                   |
+| (50+ bilgi, 10+ rutin)         |
++------------+-------------------+
+             |
+       Evet --+-- Hayir -> Faz 7'ye devam
+             |
+             |
+      J.A.R.V.I.S 2.0
+```
+
+---
+
+## Kaynak Planlamasi
+
+### Gelistirici Gereksinimleri
+
+| Faz | Backend | Ses | AI/ML | UI | Toplam |
+|-----|---------|-----|-------|-----|--------|
+| 0 | - | - | - | - | 1 (dokumantasyon) |
+| 1 | 1 | 1 | - | 1 | 3 |
+| 2 | 1 | 1 | 1 | - | 3 |
+| 3 | 1 | 1 | 2 | - | 4 |
+| 4 | 2 | - | 1 | - | 3 |
+| 5 | 2 | - | 2 | - | 4 |
+| 6 | 1 | - | - | 2 | 3 |
+| 7 | 1 | - | 2 | - | 3 |
+
+### Teknoloji Stack (Korunacak)
+
+| Alan | 1.0 | 2.0 (Ayni) |
+|------|-----|------------|
+| UI | Tkinter | Tkinter (optimize) |
+| Backend | Python | Python |
+| Ses | sounddevice + PyAudio | sounddevice + PyAudio |
+| AI | Gemini + Ollama | Gemini + Ollama |
+| Bellek | JSON | JSON + SQLite |
+| Test | unittest | unittest |
+
+---
+
+## Son Not
+
+Bu yol haritasi **esnektir**. Her fazin sonunda degerlendirme yapilir, gerekirse pivot edilir.
+Onemli olan **sirayla ilerlemek**, bir fazi atlamadan digerine gecmemek.
+
+> *"Buyuk seyler kucuk adimlarla baslar."*
+
+---
+
+**Yazar:** Adler ASI
+**Versiyon:** 2.0-roadmap-2.0
+**Tarih:** 2026-06-26

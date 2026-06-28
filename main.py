@@ -267,10 +267,12 @@ class JarvisLive:
 
         try:
             from core.wake_word import create_wake_word_engine
+            from app_config import load_app_config
+            _ww_cfg = load_app_config().get("audio", {}).get("wake_word")
             self.wake_word = create_wake_word_engine(
                 on_wake_word=lambda kw: self._on_wake_word(kw),
                 on_error=lambda exc: self.ui.write_log(f"[WakeWord] Hata: {exc}"),
-                config=self.app_config.get("audio", {}).get("wake_word"),
+                config=_ww_cfg,
             )
             self.wake_word.start()
             self._wake_word_triggered = False
@@ -278,9 +280,7 @@ class JarvisLive:
             self.wake_word = None
             self._wake_word_triggered = False
 
-        # VAD engine — not initialized here; each provider manages its own VAD
-        self.vad_engine = None
-
+        # VAD engine managed by each provider internally (FahrettinVAD in Ollama)
         try:
             from core.streaming_stt import create_streaming_stt
             _cfg = load_app_config()
@@ -337,7 +337,7 @@ class JarvisLive:
             traceback.print_exc()
             self.agent_manager = None
 
-        # ── Faz 3: Empati ve Kisilik ──
+        # ── Faz 3: Empati, Kisilik, Pause Filler ──
         try:
             from core.empathy_engine import create_empathy_engine
             self.empathy_engine = create_empathy_engine()
@@ -349,6 +349,12 @@ class JarvisLive:
             self.personality = PersonalityAdapter()
         except Exception:
             self.personality = None
+
+        try:
+            from core.pause_filler import PauseFiller
+            self.pause_filler = PauseFiller(rate=0.25)
+        except Exception:
+            self.pause_filler = None
 
         # ── Faz 4: Aliskanlik, Bildirim, Anomali ──
         try:
@@ -478,11 +484,11 @@ class JarvisLive:
         self.ui.safe_call(self.ui.mark_user_activity, True)
 
     def _on_vad_speech_start(self):
-        self.ui.write_log("[VAD] Konusma basladi")
-        self.ui.mark_user_activity(True)
+        self.ui.safe_call(self.ui.write_log, "[VAD] Konusma basladi")
+        self.ui.safe_call(self.ui.mark_user_activity, True)
 
     def _on_vad_speech_end(self):
-        self.ui.write_log("[VAD] Konusma sona erdi")
+        self.ui.safe_call(self.ui.write_log, "[VAD] Konusma sona erdi")
 
     async def _speak_response(self, response_text: str):
         if hasattr(self, "thinking_aloud") and self.thinking_aloud:
@@ -491,7 +497,7 @@ class JarvisLive:
             except Exception:
                 pass
 
-        # ── Faz 3: Empati ve Kisilik ──
+        # ── Faz 3: Empati, Kisilik, Pause Filler ──
         empathy = getattr(self, "empathy_engine", None)
         if empathy is not None:
             try:
@@ -506,6 +512,13 @@ class JarvisLive:
         if personality is not None and hasattr(self, "_last_user_text"):
             try:
                 personality.analyze_text(self._last_user_text)
+            except Exception:
+                pass
+
+        pause_filler = getattr(self, "pause_filler", None)
+        if pause_filler is not None:
+            try:
+                response_text = pause_filler.fill(response_text)
             except Exception:
                 pass
 
@@ -1269,23 +1282,14 @@ def main():
         print("[JARVIS] ── ── ── ── ── ── ──")
         if not hw_mgr.is_audio_ready():
             print("[JARVIS] ⚠️  No microphone detected — voice input disabled.")
-        if not hw_mgr.is_display_ready():
-            state = hw_mgr.get_state()
-            print(f"[JARVIS] ⚠️  No display — {state.detection.display.detail}")
-            print("[JARVIS] Display olmadigi icin headless CLI moduna geçiliyor...")
-            headless = True
-        if headless:
-            print("[JARVIS] Headless CLI mode active.")
         # Start background health monitoring
         hw_mgr.start_monitoring(interval_s=60.0)
     except ImportError as e:
         print(f"[JARVIS] HardwareManager not available: {e}")
     except Exception as e:
-        print(f"[JARVIS] Hardware init failed: {e}")
-        if not headless:
-            # In GUI mode, hardware failure is fatal
-            print("[JARVIS] Kapatiliyor...")
-            return
+        print(f"[JARVIS] Hardware init warning (non-fatal): {e}")
+    if headless:
+        print("[JARVIS] Headless CLI mode active.")
 
     try:
         from core.notification import notify
