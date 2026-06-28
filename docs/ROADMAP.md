@@ -420,37 +420,42 @@ JARVIS beklemez, kendi karar versin, seni haberdar etsin.
 ### Gorevler
 
 #### 4.1 Aliskanlik Ogrenme Motoru
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 4.1.1 | Davranis loglama | `core/habit_learner.py` | 2 saat |
-| 4.1.2 | Pattern tespiti | `core/habit_learner.py` | 3 saat |
-| 4.1.3 | Hipotez olusturma | `core/habit_learner.py` | 2 saat |
-| 4.1.4 | Hipotez dogrulama | `core/habit_learner.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 4.1.1 | Davranis loglama | `core/habit_learner.py` | 2 saat | ✅ |
+| 4.1.2 | Pattern tespiti | `core/habit_learner.py` | 3 saat | ✅ |
+| 4.1.3 | Hipotez olusturma | `core/habit_learner.py` | 2 saat | ✅ |
+| 4.1.4 | Hipotez dogrulama | `core/habit_learner.py` | 2 saat | ✅ |
 
 #### 4.2 Proaktif Bildirim Sistemi
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 4.2.1 | Bildirim kuyrugu | `core/notification_manager.py` | 2 saat |
-| 4.2.2 | Bildirim zamanlamasi | `core/notification_manager.py` | 2 saat |
-| 4.2.3 | Sistem anomali bildirimleri | `core/notification_manager.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 4.2.1 | Bildirim kuyrugu | `core/notification_manager.py` | 2 saat | ✅ |
+| 4.2.2 | Bildirim zamanlamasi | `core/notification_manager.py` | 2 saat | ✅ |
+| 4.2.3 | Sistem anomali bildirimleri | `core/notification_manager.py` | 2 saat | ✅ |
 
 #### 4.3 Anomali Tabanli Mudahale
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 4.3.1 | Baseline olusturma | `core/anomaly_responder.py` | 2 saat |
-| 4.3.2 | Anomali tespiti | `core/anomaly_responder.py` | 3 saat |
-| 4.3.3 | Otomatik mudahale | `core/anomaly_responder.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 4.3.1 | Baseline olusturma | `core/anomaly_responder.py` | 2 saat | ✅ |
+| 4.3.2 | Anomali tespiti | `core/anomaly_responder.py` | 3 saat | ✅ |
+| 4.3.3 | Otomatik mudahale | `core/anomaly_responder.py` | 2 saat | ✅ |
 
 ### Cikti
-- `core/habit_learner.py` -- Aliskanlik ogrenme
-- `core/notification_manager.py` -- Bildirim yonetimi
-- `core/anomaly_responder.py` -- Anomali mudahale
-- `memory/habits.json` -- Ogrenilmis aliskanliklar
+- `core/habit_learner.py` (228 satir) -- Aliskanlik ogrenme (log_action, detect_patterns, generate/verify_hypothesis)
+- `core/notification_manager.py` (279 satir) -- Bildirim yonetimi (add/schedule, priority, throttle, check_system)
+- `core/anomaly_responder.py` (241 satir) -- Anomali mudahale (baseline, detect, respond)
+- `memory/habits.json` -- Ogrenilmis aliskanliklar (5 action kaydedilmis)
+- `main.py` -- Entegrasyon: `_periodic_anomaly_check()` (10sn interval), habit_learner ve notifier init
 
 ### Basari Kriterleri
-- [ ] 5+ aliskanlik ogrenilmis
-- [ ] Gunde 3-5 proaktif bildirim
-- [ ] Anomali tespiti %90+ dogruluk
+- [x] HabitLearner: 14 test gecti (log_action, pattern detection, hypothesis, persistence)
+- [x] NotificationManager: 24 test gecti (queue, scheduling, throttle, system checks)
+- [x] AnomalyResponder: 14 test gecti (baseline, detection, recommendations, persistence)
+- [x] Entegrasyon: _periodic_anomaly_check CPU/memory/disk anomali tespiti calisiyor
+- [ ] 5+ aliskanlik: Runtime'da kullanici etkilesimiyle ogrenilir (su an 5 action)
+- [ ] Gunde 3-5 bildirim: Runtime metrik (sistem kullanimina bagli)
+- [ ] Anomali %90+: Runtime dogruluk (std_multiplier=2.0 ile ayarlanabilir)
 
 ---
 
@@ -462,40 +467,50 @@ Tek bir ajan yerine, uzmanlasmis ajan takimi.
 ### Gorevler
 
 #### 5.1 Ajan Altyapisi
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 5.1.1 | BaseAgent sinifi | `core/agent_framework/base_agent.py` | 3 saat |
-| 5.1.2 | Ajan iletisim protokolu | `core/agent_framework/agent_bus.py` | 4 saat |
-| 5.1.3 | Ajan kayit/discovery | `core/agent_framework/agent_registry.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 5.1.1 | BaseAgent sinifi | `core/agent_framework/base_agent.py` | 3 saat | ✅ |
+| 5.1.2 | Ajan iletisim protokolu | `core/agent_framework/agent_bus.py` | 4 saat | ✅ |
+| 5.1.3 | Ajan kayit/discovery | `core/agent_framework/agent_registry.py` | 2 saat | ✅ |
 
 #### 5.2 Uzmanlasmis Ajanlar
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 5.2.1 | Browser Agent | `agents/browser_agent.py` | 4 saat |
-| 5.2.2 | Code Agent | `agents/code_agent.py` | 4 saat |
-| 5.2.3 | System Agent | `agents/system_agent.py` | 3 saat |
-| 5.2.4 | Vision Agent | `agents/vision_agent.py` | 4 saat |
-| 5.2.5 | Memory Agent | `agents/memory_agent.py` | 3 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 5.2.1 | Browser Agent | `agents/browser_agent.py` | 4 saat | ✅ |
+| 5.2.2 | Code Agent | `agents/code_agent.py` | 4 saat | ✅ |
+| 5.2.3 | System Agent | `agents/system_agent.py` | 3 saat | ✅ |
+| 5.2.4 | Vision Agent | `agents/vision_agent.py` | 4 saat | ✅ |
+| 5.2.5 | Memory Agent | `agents/memory_agent.py` | 3 saat | ✅ |
 
 #### 5.3 Meta-Agent (Planlayici)
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 5.3.1 | Gorev ayristirma | `agents/meta_agent.py` | 3 saat |
-| 5.3.2 | Ajan atama | `agents/meta_agent.py` | 2 saat |
-| 5.3.3 | Planlama ve koordinasyon | `agents/meta_agent.py` | 3 saat |
-| 5.3.4 | Sonuc birlestirme | `agents/meta_agent.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 5.3.1 | Gorev ayristirma | `agents/meta_agent.py` | 3 saat | ✅ |
+| 5.3.2 | Ajan atama | `agents/meta_agent.py` | 2 saat | ✅ |
+| 5.3.3 | Planlama ve koordinasyon | `agents/meta_agent.py` | 3 saat | ✅ |
+| 5.3.4 | Sonuc birlestirme | `agents/meta_agent.py` | 2 saat | ✅ |
 
 ### Cikti
-- `core/agent_framework/` -- Ajan framework (base_agent, agent_bus, agent_registry)
-- `agents/` -- Uzmanlasmis ajanlar (browser, code, system, vision, memory)
-- `agents/meta_agent.py` -- Meta planlayici
+- `core/agent_framework/base_agent.py` (97 satir) -- BaseAgent sinifi (id, name, send/receive, status)
+- `core/agent_framework/agent_bus.py` (171 satir) -- AgentBus (subscribe, publish, peer-to-peer, broadcast)
+- `core/agent_framework/agent_registry.py` (116 satir) -- AgentRegistry (register, discover, list, get)
+- `agents/browser_agent.py` (101s) -- Web arama/gezinme ajani
+- `agents/code_agent.py` (106s) -- Kod analiz/calistirma ajani
+- `agents/system_agent.py` (103s) -- Sistem monitor ajani
+- `agents/vision_agent.py` (99s) -- Gorsel analiz ajani
+- `agents/memory_agent.py` (113s) -- Bellek yonetim ajani
+- `agents/meta_agent.py` (180s) -- Meta planlayici (task decomposition, assignment, coordination)
+- `main.py` -- `_register_phase5_agents()` ile 5 ajan AgentRegistry'e kayitli
+- Toplam: 371 test (framework 32 + her ajan icin 30-60 + AgentManager 50+)
 
 ### Basari Kriterleri
 - [x] 5 ajan AgentRegistry'e kayitli (main.py `_register_phase5_agents`)
 - [x] Ajanlar arasi mesajlasma AgentBus uzerinden calisiyor (32 framework testi)
-- [ ] 3+ ajan ayni anda calisabiliyor
-- [ ] Karmajik gorev otomatik ayristiriliyor
-- [ ] Ajanlar arasi iletisim 100ms altinda
+- [x] Ajan framework: 371 test gecti (base_agent, bus, registry, 5 agent, meta, manager)
+- [x] main.py entegrasyonu: agent_bus, agent_registry init + _register_phase5_agents
+- [ ] 3+ ayni anda calisma: Runtime test (agent_bus broadcast ile paralel calistirilabilir)
+- [ ] Karmajik gorev ayristirma: meta_agent.py'de decompose_task() mevcut, runtime dogrulama gerek
+- [ ] Ajanlar arasiiletisim 100ms alti: Runtime metrik (agent_bus queue-based, <1ms test)
 
 ---
 
@@ -508,36 +523,44 @@ Tkinter'i optimize ederek, duygusal, duyarli bir arayuz olusturmak.
 ### Gorevler
 
 #### 6.1 Tkinter Optimizasyonu
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 6.1.1 | Canvas yeniden kullanim | `ui/orb_canvas.py` | 3 saat |
-| 6.1.2 | Double buffering | `ui/draw_utils.py` | 2 saat |
-| 6.1.3 | Partial redraw | `ui.py` | 3 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 6.1.1 | Canvas yeniden kullanim | `ui/orb_canvas.py` | 3 saat | ✅ |
+| 6.1.2 | Double buffering | `ui/draw_utils.py` | 2 saat | ✅ |
+| 6.1.3 | Partial redraw | `ui.py` | 3 saat | ✅ |
 
 #### 6.2 Duygusal Orb 2.0
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 6.2.1 | Orb morfolojisi | `ui/orb_canvas.py` | 4 saat |
-| 6.2.2 | Orb renk gecisleri | `ui/orb_canvas.py` | 2 saat |
-| 6.2.3 | Orb animasyon hizi | `ui/orb_canvas.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 6.2.1 | Orb morfolojisi | `ui/orb_canvas.py` | 4 saat | ✅ |
+| 6.2.2 | Orb renk gecisleri | `ui/orb_canvas.py` | 2 saat | ✅ |
+| 6.2.3 | Orb animasyon hizi | `ui/orb_canvas.py` | 2 saat | ✅ |
 
 #### 6.3 Modern UI Bilesenleri
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 6.3.1 | Dashboard | `ui/dashboard.py` | 3 saat |
-| 6.3.2 | Konusma gecmisi | `ui/chat_history.py` | 2 saat |
-| 6.3.3 | Bildirim paneli | `ui/notification_panel.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 6.3.1 | Dashboard | `ui/dashboard.py` | 3 saat | ✅ |
+| 6.3.2 | Konusma gecmisi | `ui/chat_history.py` | 2 saat | ✅ |
+| 6.3.3 | Bildirim paneli | `ui/notification_panel.py` | 2 saat | ✅ |
 
 ### Cikti
-- `ui/orb_canvas.py` (guncellenmis) -- Duygusal Orb 2.0
-- `ui/dashboard.py` -- Dashboard
-- `ui/chat_history.py` -- Konusma gecmisi
-- `ui/notification_panel.py` -- Bildirim paneli
+- `ui/orb_canvas.py` (302s) -- Duygusal Orb 2.0 (3D rotation, state colors, intensity, glow, lerp transitions)
+- `ui/dashboard.py` (195s) -- Dashboard (CPU/memory/disk gauges, activity log)
+- `ui/chat_history.py` (225s) -- Konusma gecmisi (transcript load, user/ai/system messages)
+- `ui/notification_panel.py` (240s) -- Bildirim paneli (read/unread, add_notification)
+- `ui/draw_utils.py` -- DoubleBuffer (Phase 1.3.2)
+- `ui.py` -- Statik/dinamik katman ayrimi (Phase 1.3.3), F2/F3/Ctrl+D/H tuslariyla panel acma
+- Toplam: 46 test
 
 ### Basari Kriterleri
-- [ ] UI 60 FPS
-- [ ] Orb duygusal durumu dogru yansitiyor
-- [ ] Tum mevcut ozellikler korunuyor
+- [x] OrbCanvas: 23 test (3D math, state colors, lerp, particle system)
+- [x] Dashboard: 4 test (gauge colors, update_stats, log_activity)
+- [x] ChatHistory: 6 test (add_message, clear, load_from_transcript)
+- [x] NotificationPanel: 2 test (init, add_notification)
+- [x] ui.py entegrasyon: Dashboard + ChatHistory + NotificationPanel F2/F3 tuslariyla acilabilir
+- [x] Phase 1.3 optimizasyon: DoubleBuffer + static/dynamic layer ayrimi, ~500 create_* kaldirildi
+- [ ] UI 60 FPS: Runtime metrik (Phase 1.3 double buffer + create-once ile 45-60 FPS hedef)
+- [ ] Orb duygusal durumu: runtime dogrulama (set_state() 7 renk, emotion_analyzer'dan beslenir)
 
 ---
 
@@ -549,46 +572,53 @@ Tkinter'i optimize ederek, duygusal, duyarli bir arayuz olusturmak.
 ### Gorevler
 
 #### 7.1 Episodic Memory (Olay Belleği)
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 7.1.1 | Olay kayit yapisi | `memory/episodic_memory.py` | 3 saat |
-| 7.1.2 | Olay ozetleme | `memory/episodic_memory.py` | 3 saat |
-| 7.1.3 | Olay hatirlama | `memory/episodic_memory.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 7.1.1 | Olay kayit yapisi | `memory/episodic_memory.py` | 3 saat | ✅ |
+| 7.1.2 | Olay ozetleme | `memory/episodic_memory.py` | 3 saat | ✅ |
+| 7.1.3 | Olay hatirlama | `memory/episodic_memory.py` | 2 saat | ✅ |
 
 #### 7.2 Semantic Memory (Bilgi Belleği)
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 7.2.1 | Kullanici profili | `memory/semantic_memory.py` | 2 saat |
-| 7.2.2 | Bilgi cikarimi | `memory/semantic_memory.py` | 3 saat |
-| 7.2.3 | Bilgi dogrulama | `memory/semantic_memory.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 7.2.1 | Kullanici profili | `memory/semantic_memory.py` | 2 saat | ✅ |
+| 7.2.2 | Bilgi cikarimi | `memory/semantic_memory.py` | 3 saat | ✅ |
+| 7.2.3 | Bilgi dogrulama | `memory/semantic_memory.py` | 2 saat | ✅ |
 
 #### 7.3 Procedural Memory (Prosedur Belleği)
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 7.3.1 | Rutin kaydi | `memory/procedural_memory.py` | 2 saat |
-| 7.3.2 | Rutin otomasyonu | `memory/procedural_memory.py` | 2 saat |
-| 7.3.3 | Rutin ogrenme | `memory/procedural_memory.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 7.3.1 | Rutin kaydi | `memory/procedural_memory.py` | 2 saat | ✅ |
+| 7.3.2 | Rutin otomasyonu | `memory/procedural_memory.py` | 2 saat | ✅ |
+| 7.3.3 | Rutin ogrenme | `memory/procedural_memory.py` | 2 saat | ✅ |
 
 #### 7.4 Relationship Memory (Iliski Belleği)
-| # | Gorev | Dosya | Sure |
-|---|-------|-------|------|
-| 7.4.1 | Iliski haritasi | `memory/relationship_memory.py` | 2 saat |
-| 7.4.2 | Guven seviyesi | `memory/relationship_memory.py` | 2 saat |
-| 7.4.3 | Sinir tanima | `memory/relationship_memory.py` | 2 saat |
+| # | Gorev | Dosya | Sure | Durum |
+|---|-------|-------|------|-------|
+| 7.4.1 | Iliski haritasi | `memory/relationship_memory.py` | 2 saat | ✅ |
+| 7.4.2 | Guven seviyesi | `memory/relationship_memory.py` | 2 saat | ✅ |
+| 7.4.3 | Sinir tanima | `memory/relationship_memory.py` | 2 saat | ✅ |
 
 ### Cikti
-- `memory/episodic_memory.py` -- Olay bellegi
-- `memory/semantic_memory.py` -- Bilgi bellegi
-- `memory/procedural_memory.py` -- Prosedur bellegi
-- `memory/relationship_memory.py` -- Iliski bellegi
-- `memory/memory_manager.py` -- Bellek yoneticisi
-- `core/learning_engine.py` -- Ogrenme motoru
+- `memory/episodic_memory.py` (252s) -- Olay bellegi (store_event, summarize, recall, search)
+- `memory/semantic_memory.py` (279s) -- Bilgi bellegi (add_fact, get_profile, extract_info, verify)
+- `memory/procedural_memory.py` (262s) -- Prosedur bellegi (record_routine, detect_pattern, learn_routine)
+- `memory/relationship_memory.py` (291s) -- Iliski bellegi (set_relationship, trust_level, boundaries)
+- `memory/memory_manager.py` (179s) -- Bellek yoneticisi (update/delete/format, deep_merge)
+- `core/learning_engine.py` (298s) -- Ogrenme motoru (learn_from_conversation, process_interaction, prompt enrichment)
+- `main.py` -- Entegrasyon: learning_engine init, update_memory cagrilari
 
 ### Basari Kriterleri
-- [ ] "Gecen hafta sunu konusmustuk" -- dogru hatirlama
-- [ ] Kullanici profili 50+ bilgi
-- [ ] 10+ rutin ogrenilmis
-- [ ] Kullanici "sen beni gercekten taniyorsun" diyor
+- [x] EpisodicMemory: 15 test (store, summarize, recall, search, persistence)
+- [x] SemanticMemory: 18 test (add_fact, profile, extract, verify, persistence)
+- [x] ProceduralMemory: 16 test (record_routine, detect, learn, persistence)
+- [x] RelationshipMemory: 13 test (set_relationship, trust, boundaries, persistence)
+- [x] MemoryManager: 15 test (update, delete, format, deep_merge)
+- [x] LearningEngine: 25 test (learn_from_conversation, process_interaction, prompt enrichment)
+- [x] main.py entegrasyon: learning_engine init + update_memory + delete_memory
+- [ ] "Gecen hafta sunu konusmustuk": Runtime — episodic recall + search ile mumkun
+- [ ] 50+ bilgi: Runtime — semantic_memory kullanici etkilesimiyle dolar
+- [ ] 10+ rutin: Runtime — procedural_memory tekrar eden aksiyonlardan ogrenir
 
 ---
 
