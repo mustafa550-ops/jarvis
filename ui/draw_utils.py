@@ -1,12 +1,22 @@
 """
-JARVIS UI — Drawing utilities
+JARVIS UI — Drawing utilities & double buffer.
 Canvas helper functions extracted from JarvisUI for reuse.
+
+DoubleBuffer:
+    Off-screen canvas → PhotoImage blit.
+    Eliminates flicker from delete+recreate patterns.
 """
 
 from __future__ import annotations
 
+import io
 import math
+import tkinter as tk
+from typing import Optional
+
 from ui.theme import C_BG, C_DIM, C_PRI, C_TEXT, ORB_COLORS
+
+# ── Existing helper functions ────────────────────────────────
 
 
 def _ac(r: int, g: int, b: int, a: int) -> str:
@@ -73,3 +83,132 @@ def _orb_rgb(state: str, paused: bool) -> tuple[int, int, int]:
     """Resolve orb colour for the current state."""
     key = "PAUSED" if paused else state
     return ORB_COLORS.get(key, ORB_COLORS["LISTENING"])
+
+
+# ── Double Buffer ────────────────────────────────────────────
+
+
+class DoubleBuffer:
+    """Double-buffered rendering for Tkinter Canvas.
+
+    Maintains an off-screen canvas of the same size as the visible
+    canvas. Render operations draw to the off-screen buffer; blit()
+    copies the result to the visible canvas in one operation using
+    a PhotoImage.
+
+    This eliminates flicker from delete+recreate patterns and keeps
+    the visible canvas update atomic.
+
+    Usage:
+        buf = DoubleBuffer(visible_canvas, width=1200, height=800)
+        # All drawing goes to buf.off:
+        buf.clear()
+        buf.off.create_text(100, 100, text="Hello")
+        # Then blit once:
+        buf.blit()
+
+        # Or use as render context manager:
+        with buf.render():
+            buf.off.create_text(100, 100, text="Hello")
+    """
+
+    def __init__(
+        self,
+        canvas: tk.Canvas,
+        width: int,
+        height: int,
+    ):
+        self.canvas = canvas
+        self.width = width
+        self.height = height
+        self.dirty = True
+
+        # Off-screen canvas (same dimensions, never packed)
+        self.off = tk.Canvas(
+            canvas.master if canvas.master else canvas,
+            width=width,
+            height=height,
+            bg="#020c0c",
+            highlightthickness=0,
+        )
+        self._image: Optional[tk.PhotoImage] = None
+
+    def clear(self) -> None:
+        """Clear the off-screen canvas."""
+        self.off.delete("all")
+        self.dirty = True
+
+    def resize(self, width: int, height: int) -> None:
+        """Resize both canvases and invalidate the buffer."""
+        self.width = width
+        self.height = height
+        self.canvas.configure(width=width, height=height)
+        self.off.configure(width=width, height=height)
+        self._image = None
+        self.dirty = True
+
+    def blit(self) -> None:
+        """Copy off-screen content to the visible canvas.
+
+        Uses a PostScript → PhotoImage round-trip. If the visible
+        canvas already has an image item with a known tag, it
+        reuses that item; otherwise creates a new one.
+        """
+        if not self.dirty:
+            return
+        self.dirty = False
+
+        # Generate PostScript from off-screen canvas
+        try:
+            ps_data = self.off.postscript(
+                colormode="color",
+                width=self.width - 1,
+                height=self.height - 1,
+                x=0,
+                y=0,
+            )
+        except Exception:
+            return
+
+        # Convert PostScript → PhotoImage
+        try:
+            img = tk.PhotoImage(data=ps_data)
+        except Exception:
+            return
+
+        self._image = img
+
+        # Reuse or create the image item on the visible canvas
+        existing = self.canvas.find_withtag("_db_image")
+        if existing:
+            self.canvas.itemconfig(existing[0], image=img)
+        else:
+            self.canvas.create_image(
+                0, 0, anchor="nw", image=img, tag="_db_image"
+            )
+        # Lower image behind other dynamic items
+        self.canvas.tag_lower("_db_image")
+        self.dirty = False
+
+    def render(self):
+        """Context manager: clear, draw, blit.
+
+        Usage:
+            with buf.render():
+                buf.off.create_text(100, 100, text="Hello")
+        """
+        return _RenderContext(self)
+
+
+class _RenderContext:
+    """Context manager for DoubleBuffer.render()."""
+
+    def __init__(self, db: DoubleBuffer):
+        self.db = db
+
+    def __enter__(self) -> tk.Canvas:
+        self.db.clear()
+        return self.db.off
+
+    def __exit__(self, *exc) -> None:
+        self.db.blit()

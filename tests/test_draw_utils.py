@@ -118,5 +118,57 @@ class TestDrawUtils(unittest.TestCase):
         self.assertTrue(callable(_draw_info_card))
 
 
+class TestDoubleBuffer(unittest.TestCase):
+    """DoubleBuffer testleri — Tkinter gerektirir."""
+
+    def setUp(self):
+        import tkinter as tk
+        self.root = tk.Tk()
+        self.root.withdraw()
+        self.canvas = tk.Canvas(self.root, width=100, height=100)
+
+    def tearDown(self):
+        self.root.destroy()
+
+    def test_init_defaults(self):
+        from ui.draw_utils import DoubleBuffer
+        buf = DoubleBuffer(self.canvas, 200, 150)
+        self.assertEqual(buf.width, 200)
+        self.assertEqual(buf.height, 150)
+        self.assertTrue(buf.dirty)
+
+    def test_clear_sets_dirty(self):
+        from ui.draw_utils import DoubleBuffer
+        buf = DoubleBuffer(self.canvas, 100, 100)
+        buf.clear()
+        self.assertTrue(buf.dirty)
+
+    def test_resize_updates_dimensions(self):
+        from ui.draw_utils import DoubleBuffer
+        buf = DoubleBuffer(self.canvas, 100, 100)
+        buf.resize(300, 200)
+        self.assertEqual(buf.width, 300)
+        self.assertEqual(buf.height, 200)
+
+    def test_render_context(self):
+        from ui.draw_utils import DoubleBuffer
+        buf = DoubleBuffer(self.canvas, 100, 100)
+        with buf.render() as off:
+            off.create_text(50, 50, text="test")
+        # Render context exits without error (PostScript blit may fail headless)
+        self.assertFalse(buf.dirty)
+
+    def test_render_context_clear(self):
+        from ui.draw_utils import DoubleBuffer
+        buf = DoubleBuffer(self.canvas, 100, 100)
+        with buf.render() as off:
+            off.create_text(10, 10, text="hello")
+        self.assertFalse(buf.dirty)
+        # Second render should clear previous content
+        with buf.render() as off:
+            off.create_text(20, 20, text="world")
+        self.assertFalse(buf.dirty)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
